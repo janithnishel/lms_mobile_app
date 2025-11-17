@@ -15,6 +15,11 @@ class ResultsScreen extends StatelessWidget {
   const ResultsScreen({Key? key}) : super(key: key);
 
   // --- UI Utility Methods ---
+  String _formatTime(double timeInSeconds) {
+    final minutes = timeInSeconds ~/ 60;
+    final seconds = (timeInSeconds % 60).toInt();
+    return minutes > 0 ? '$minutes min $seconds sec' : '$seconds sec';
+  }
   String _formatDate(String? iso) {
     if (iso == null) return '-';
     try {
@@ -285,8 +290,7 @@ class ResultsScreen extends StatelessWidget {
                                                 '${attempt['score'] ?? 0}/${attempt['totalQuestions'] ?? 0}',
                                             percentage:
                                                 '${percentageNum.toString()}%',
-                                            timeSpent:
-                                                '${attempt['timeSpent'] ?? 0} min',
+                                            timeSpent: _formatTime((attempt['timeSpent'] ?? 0).toDouble()),
                                             questions:
                                                 attempt['totalQuestions'] ?? 0,
                                             grade: grade,

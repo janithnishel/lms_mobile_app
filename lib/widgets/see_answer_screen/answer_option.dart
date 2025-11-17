@@ -172,28 +172,12 @@ class AnswerOption extends StatelessWidget {
       ),
       child: Row(
         children: [
-          Container(
-            width: 32,
-            height: 32,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              border: Border.all(
-                color: borderColor,
-                width: 2,
-              ),
-              color: isCorrect || isUserAnswer 
-                  ? Colors.transparent 
-                  : Colors.grey[100],
-            ),
-            child: Center(
-              child: Text(
-                label,
-                style: TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.bold,
-                  color: textColor,
-                ),
-              ),
+          Text(
+            '${label}.',  // Simple text format: A., B., C., D.
+            style: const TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+              color: Colors.black87,
             ),
           ),
           const SizedBox(width: 16),
@@ -201,10 +185,11 @@ class AnswerOption extends StatelessWidget {
             child: Text(
               text,
               style: TextStyle(
-                fontSize: 15,
+                fontSize: 16,
                 color: textColor,
                 fontWeight: FontWeight.w500,
               ),
+              softWrap: true, // Allow text to wrap
             ),
           ),
           if (icon != null && statusText != null) ...[

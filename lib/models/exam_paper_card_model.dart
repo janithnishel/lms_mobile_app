@@ -63,15 +63,38 @@ class ExamPaperCardModel {
         timeLeftColor = Colors.red;
     } else {
         final Duration remaining = paper.deadline.difference(DateTime.now());
-        
-        if (remaining.inDays > 1) {
-            timeLeftDisplay = '${remaining.inDays} Days Left';
+
+        final int days = remaining.inDays;
+        final int hours = remaining.inHours % 24;
+        final int minutes = remaining.inMinutes % 60;
+
+        // Build detailed time display
+        List<String> timeParts = [];
+
+        if (days > 0) {
+            timeParts.add('${days}d');
+        }
+
+        if (hours > 0 || days > 0) {  // Show hours if there are days OR if hours > 0
+            timeParts.add('${hours}h');
+        }
+
+        if (days == 0 && hours >= 0) {  // Only show minutes if no days left
+            timeParts.add('${minutes}m');
+        }
+
+        timeLeftDisplay = timeParts.isNotEmpty
+            ? '${timeParts.join(' ')} Left'
+            : 'Less than 1m!';
+
+        // Color logic: green for lots of time, orange for days/hours, red for urgent
+        if (days >= 2) {
             timeLeftColor = Colors.blue;
-        } else if (remaining.inHours > 1) {
-            timeLeftDisplay = '${remaining.inHours} Hours Left';
+        } else if (days >= 1 || hours >= 4) {
+            timeLeftColor = Colors.teal;
+        } else if (hours >= 1) {
             timeLeftColor = Colors.orange;
         } else {
-            timeLeftDisplay = 'Less than 1 Hour!';
             timeLeftColor = Colors.red;
         }
     }

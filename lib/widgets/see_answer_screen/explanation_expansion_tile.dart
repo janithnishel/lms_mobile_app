@@ -10,6 +10,36 @@ class ExplanationExpansionTile extends StatelessWidget {
     this.visualExplanationUrl,
   });
 
+  // ⚠️ IMPORTANT: Set your server's base URL here!
+  static final String _imageBaseUrl = 'http://10.0.2.2:5000';
+
+  // Normalize image paths returned by the server (same logic as quiz screen)
+  String _normalizeImageUrl(String raw) {
+    if (raw.isEmpty) return '';
+    // Already absolute
+    if (raw.startsWith('http')) return raw;
+
+    String path = raw;
+
+    if (path.startsWith('/api/uploads')) {
+      return '$_imageBaseUrl$path';
+    }
+
+    if (path.startsWith('/uploads')) {
+      // Replace leading /uploads with /api/uploads
+      path = path.replaceFirst('/uploads', '/api/uploads');
+      return '$_imageBaseUrl$path';
+    }
+
+    // If path starts with '/' but not /uploads or /api/uploads -> prefix /api/uploads
+    if (path.startsWith('/')) {
+      return '$_imageBaseUrl/api/uploads$path';
+    }
+
+    // No leading slash -> assume it's a relative path under uploads
+    return '$_imageBaseUrl/api/uploads/$path';
+  }
+
   @override
   Widget build(BuildContext context) {
     final hasExplanation = explanation != null && explanation!.isNotEmpty;
@@ -101,29 +131,61 @@ class ExplanationExpansionTile extends StatelessWidget {
                     Center(
                       child: ClipRRect(
                         borderRadius: BorderRadius.circular(8),
-                        child: Image.network(
-                          visualExplanationUrl!,
-                          height: 150,
-                          fit: BoxFit.contain,
-                          // 🛑 FIX START: Changed cumulativeProgress to cumulativeBytesLoaded
-                          loadingBuilder: (context, child, loadingProgress) {
-                            if (loadingProgress == null) return child;
-                            return Center(
-                              child: CircularProgressIndicator(
-                                value:
-                                    loadingProgress.expectedTotalBytes != null
-                                    ? loadingProgress.cumulativeBytesLoaded /
-                                          loadingProgress.expectedTotalBytes!
-                                    : null,
-                              ),
-                            );
-                          },
-                          // 🛑 FIX END
-                          errorBuilder: (context, error, stackTrace) =>
-                              const Text(
-                                'Image failed to load or URL is invalid.',
-                              ),
-                        ),
+                        child: Builder(builder: (context) {
+                          final String finalImageUrl = _normalizeImageUrl(visualExplanationUrl!);
+
+                          if (finalImageUrl.isNotEmpty) {
+                            print('DEBUG: Loading explanation image in see answers -> $finalImageUrl');
+                          }
+
+                          return Image.network(
+                            finalImageUrl,
+                            height: 150,
+                            fit: BoxFit.contain,
+                            // 🛑 FIX START: Changed cumulativeProgress to cumulativeBytesLoaded
+                            loadingBuilder: (context, child, loadingProgress) {
+                              if (loadingProgress == null) return child;
+                              return Center(
+                                child: CircularProgressIndicator(
+                                  value:
+                                      loadingProgress.expectedTotalBytes != null
+                                      ? loadingProgress.cumulativeBytesLoaded /
+                                            loadingProgress.expectedTotalBytes!
+                                      : null,
+                                ),
+                              );
+                            },
+                            // 🛑 FIX END
+                            errorBuilder: (context, error, stackTrace) {
+                              final String finalImageUrl = _normalizeImageUrl(visualExplanationUrl!);
+                              return Container(
+                                height: 150,
+                                decoration: BoxDecoration(
+                                  color: Colors.grey[200],
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                child: Column(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    const Icon(Icons.image_not_supported, size: 32, color: Colors.grey),
+                                    const SizedBox(height: 4),
+                                    Text(
+                                      'Image Error: ${error.toString()}',
+                                      style: const TextStyle(color: Colors.red, fontSize: 10),
+                                      textAlign: TextAlign.center,
+                                    ),
+                                    const SizedBox(height: 2),
+                                    Text(
+                                      'URL: ${finalImageUrl.substring(0, 50)}...',
+                                      style: const TextStyle(color: Colors.black54, fontSize: 8),
+                                      textAlign: TextAlign.center,
+                                    ),
+                                  ],
+                                ),
+                              );
+                            },
+                          );
+                        }),
                       ),
                     ),
                   ],

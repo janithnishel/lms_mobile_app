@@ -116,26 +116,45 @@ class SeeAnswersRepository {
 
   QuestionData _createQuestionData(Map<String, dynamic> question, dynamic userAnswer) {
     final questionText = question['questionText'] ?? question['text'] ?? '';
+    final rawImageUrl = question['imageUrl'] ?? '';
+    String? imageUrl;
+    if (rawImageUrl.isNotEmpty) {
+      // If it's already a full URL, use as is, otherwise prepend base URL
+      imageUrl = rawImageUrl.startsWith('http')
+          ? rawImageUrl
+          : 'http://10.0.2.2:5000$rawImageUrl';
+    }
+    print('DEBUG _createQuestionData: question has imageUrl field? ${question.containsKey('imageUrl')}, raw: $rawImageUrl, processed: $imageUrl');
 
     final options = question['options'] as List<dynamic>? ?? [];
-    final optionTexts = options.map((opt) => opt is Map ? opt['text']?.toString() ?? '' : opt.toString()).toList();
+    // Filter out invalid/empty options like quiz screen does - keep only options with meaningful text
+    final filteredOptions = options.where((opt) => opt is Map).where((opt) {
+      final text = opt['text']?.toString() ?? '';
+      final choiceText = opt['optionText']?.toString() ?? '';
+      final hasContent = (text.isNotEmpty && text.length > 1) || (choiceText.isNotEmpty && choiceText.length > 1);
+      return hasContent;
+    }).toList();
 
-    // Find correct answer index
+    final optionTexts = filteredOptions.map((opt) => opt is Map ? (opt['text']?.toString() ?? opt['optionText']?.toString() ?? '') : opt.toString()).toList();
+
+    // Find correct answer index in filtered options
     int correctIndex = -1;
-    for (int i = 0; i < options.length; i++) {
-      if (options[i] is Map && (options[i]['isCorrect'] == true || options[i]['correct'] == true)) {
+    String? correctOptionId;
+    for (int i = 0; i < filteredOptions.length; i++) {
+      if (filteredOptions[i] is Map && (filteredOptions[i]['isCorrect'] == true || filteredOptions[i]['correct'] == true)) {
         correctIndex = i;
+        correctOptionId = filteredOptions[i]['_id']?.toString();
         break;
       }
     }
 
-    // Find user's answer index
+    // Find user's answer index in filtered options
     int userIndex = -2;
     if (userAnswer != null && userAnswer is Map) {
       final selectedOptionId = userAnswer['selectedOptionId']?.toString();
       if (selectedOptionId != null) {
-        for (int i = 0; i < options.length; i++) {
-          if (options[i] is Map && options[i]['_id']?.toString() == selectedOptionId) {
+        for (int i = 0; i < filteredOptions.length; i++) {
+          if (filteredOptions[i] is Map && filteredOptions[i]['_id']?.toString() == selectedOptionId) {
             userIndex = i;
             break;
           }
@@ -149,11 +168,17 @@ class SeeAnswersRepository {
     final explanationObj = question['explanation'];
     if (explanationObj is Map) {
       explanation = explanationObj['text']?.toString();
-      visualUrl = explanationObj['imageUrl']?.toString();
+      final rawVisualUrl = explanationObj['imageUrl']?.toString() ?? '';
+      if (rawVisualUrl.isNotEmpty) {
+        visualUrl = rawVisualUrl.startsWith('http')
+            ? rawVisualUrl
+            : 'http://10.0.2.2:5000$rawVisualUrl';
+      }
     }
 
     return QuestionData(
       questionText: questionText.toString(),
+      imageUrl: imageUrl,
       options: optionTexts,
       correctAnswerIndex: correctIndex,
       userAnswerIndex: userIndex,

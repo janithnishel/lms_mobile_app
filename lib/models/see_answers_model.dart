@@ -34,7 +34,8 @@ class PaperDetails extends Equatable {
 // --- 3. Single Question Data ---
 class QuestionData extends Equatable {
   final String questionText;
-  final List<dynamic> options; 
+  final String? imageUrl;
+  final List<dynamic> options;
   final int correctAnswerIndex;
   final int userAnswerIndex;
   final String? explanation;
@@ -42,6 +43,7 @@ class QuestionData extends Equatable {
 
   const QuestionData({
     required this.questionText,
+    this.imageUrl,
     required this.options,
     required this.correctAnswerIndex,
     required this.userAnswerIndex,
@@ -52,6 +54,7 @@ class QuestionData extends Equatable {
   @override
   List<Object?> get props => [
     questionText,
+    imageUrl,
     options,
     correctAnswerIndex,
     userAnswerIndex,

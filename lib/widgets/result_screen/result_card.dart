@@ -409,7 +409,7 @@ class ResultCard extends StatelessWidget {
 
           // Progress Bar
           Container(
-            height: 6,
+            height: 12, // Increased from 6 to 12 for better visibility
             decoration: BoxDecoration(
               color: Colors.grey[200],
               borderRadius: const BorderRadius.only(

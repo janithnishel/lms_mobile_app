@@ -343,6 +343,7 @@ class _SeeAnswersView extends StatelessWidget {
                 cubit.goToQuestion(index);
                 context.pop(); // Close drawer after tapping a question
               },
+              questions: state.questions, // Pass questions data for explanation indicators
             );
           }
           return const SizedBox.shrink(); // Show nothing while loading/error
@@ -402,6 +403,9 @@ class _SeeAnswersView extends StatelessWidget {
                   QuestionDisplayCard(
                     questionIndex: currentQuestionIndex,
                     questionText: currentQuestionData.questionText,
+                    imageUrl: currentQuestionData.imageUrl,
+                    explanation: currentQuestionData.explanation,
+                    visualExplanationUrl: currentQuestionData.visualExplanationUrl,
                     options: currentQuestionData.options,
                     correctAnswerIndex: currentQuestionData.correctAnswerIndex,
                     userAnswerIndex: currentQuestionData.userAnswerIndex,
