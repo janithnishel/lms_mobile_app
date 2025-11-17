@@ -106,7 +106,7 @@ class ResultsScreen extends StatelessWidget {
                           Icons.arrow_back,
                           color: Colors.black87,
                         ),
-                        onPressed: () => context.pop(),
+                        onPressed: () => context.go('/mainscreen', extra: 2),
                       ),
                       title: const Text(
                         'My Results',

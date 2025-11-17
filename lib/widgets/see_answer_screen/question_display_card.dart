@@ -3,7 +3,9 @@ import 'package:lms_app/widgets/see_answer_screen/answer_option.dart';
 
 class QuestionDisplayCard extends StatelessWidget {
   final int questionIndex;
+  final int totalQuestions;
   final String questionText;
+  final String? paperTitle;
   final String? imageUrl;
   final List<dynamic> options;
   final int correctAnswerIndex;
@@ -14,7 +16,9 @@ class QuestionDisplayCard extends StatelessWidget {
   const QuestionDisplayCard({
     super.key,
     required this.questionIndex,
+    required this.totalQuestions,
     required this.questionText,
+    this.paperTitle,
     this.imageUrl,
     this.explanation,
     this.visualExplanationUrl,
@@ -80,84 +84,107 @@ class QuestionDisplayCard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Question Header
+            // Row showing paper name and has explanation indicator together
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              decoration: BoxDecoration(
+                color: Colors.blue[50],
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Row(
+                children: [
+                  // Paper name part
+                  Icon(
+                    Icons.assignment,
+                    size: 16,
+                    color: Colors.blue[700],
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    flex: 2,
+                    child: Text(
+                      paperTitle ?? '',
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.blue[800],
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+
+                  // Has Explanation indicator part (if applicable)
+                  if (explanation != null && explanation!.isNotEmpty || visualExplanationUrl != null && visualExplanationUrl!.isNotEmpty) ...[
+                    Container(
+                      margin: const EdgeInsets.only(left: 16),
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: Colors.orange[100],
+                        borderRadius: BorderRadius.circular(6),
+                        border: Border.all(color: Colors.orange[300]!),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            Icons.menu_book,
+                            size: 14,
+                            color: Colors.orange[700],
+                          ),
+                          const SizedBox(width: 4),
+                          Text(
+                            'Has Explanation',
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w600,
+                              color: Colors.orange[800],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+            ),
+            const SizedBox(height: 16),
+
+            // Question Number and Text together
             Row(
               children: [
                 Container(
-                  width: 40,
-                  height: 40,
+                  width: 32,
+                  height: 32,
                   decoration: BoxDecoration(
-                    color: const Color(0xFFE3F2FD),
-                    borderRadius: BorderRadius.circular(20),
+                    color: const Color(0xFF1976D2),
+                    shape: BoxShape.circle,
                   ),
                   child: Center(
                     child: Text(
-                      '${questionIndex + 1}', // Dynamic Question Number
+                      '${questionIndex + 1}',
                       style: const TextStyle(
-                        fontSize: 18,
+                        fontSize: 16,
                         fontWeight: FontWeight.bold,
-                        color: Color(0xFF1976D2),
+                        color: Colors.white,
                       ),
                     ),
                   ),
                 ),
-                const SizedBox(width: 16),
+                const SizedBox(width: 12),
                 Expanded(
-                  child: Row(
-                    children: [
-                      Text(
-                        'Question ${questionIndex + 1}',
-                        style: const TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.w600,
-                          color: Colors.black87,
-                        ),
-                      ),
-                    ],
+                  child: Text(
+                    questionText,
+                    style: const TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.black87,
+                    ),
                   ),
                 ),
-                // Explanation indicator for current question
-                if (explanation != null && explanation!.isNotEmpty || visualExplanationUrl != null && visualExplanationUrl!.isNotEmpty)
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                    decoration: BoxDecoration(
-                      color: Colors.orange[100],
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: Colors.orange[300]!),
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(
-                          Icons.menu_book,
-                          size: 14,
-                          color: Colors.orange[700],
-                        ),
-                        const SizedBox(width: 4),
-                        Text(
-                          'Has Explanation',
-                          style: TextStyle(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w600,
-                            color: Colors.orange[800],
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
               ],
             ),
-            const SizedBox(height: 24),
-
-            // Question Text
-            Text(
-              questionText, // Dynamic Question Text
-              style: const TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.w500,
-                color: Colors.black87,
-              ),
-            ),
+            const SizedBox(height: 16),
             if (imageUrl != null && imageUrl!.isNotEmpty) ...[
               const SizedBox(height: 16),
               // Question Image (Same logic as quiz screen)

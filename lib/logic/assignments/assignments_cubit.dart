@@ -19,11 +19,17 @@ class AssignmentsCubit extends Cubit<AssignmentsState> {
       // 2. Repository හරහා Backend එකෙන් දත්ත ලබා ගනියි.
       final papers = await _repository.fetchAllExamPapers();
 
-      // 3. සාර්ථකව Load වූ State එකට මාරු කරයි.
-      emit(AssignmentsLoaded(papers));
+      // 3. Check if cubit is still open before emitting
+      if (!isClosed) {
+        // සාර්ථකව Load වූ State එකට මාරු කරයි.
+        emit(AssignmentsLoaded(papers));
+      }
     } catch (e) {
-      // 4. දෝෂයක් ඇති වූ විට Error State එකට මාරු කරයි.
-      emit(AssignmentsError(e.toString().replaceFirst('Exception: ', '')));
+      // 4. Check if cubit is still open before emitting
+      if (!isClosed) {
+        // දෝෂයක් ඇති වූ විට Error State එකට මාරු කරයි.
+        emit(AssignmentsError(e.toString().replaceFirst('Exception: ', '')));
+      }
     }
   }
 }

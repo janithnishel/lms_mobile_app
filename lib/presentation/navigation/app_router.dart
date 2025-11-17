@@ -133,7 +133,10 @@ class AppRouter {
           GoRoute(
             path: AppRoutes.mainscreen,
             name: 'mainscreen',
-            builder: (context, state) => const MainScreen(),
+            builder: (context, state) {
+              final int? initialTab = state.extra as int?;
+              return MainScreen(initialTab: initialTab ?? 0);
+            },
           ),
 
           GoRoute(

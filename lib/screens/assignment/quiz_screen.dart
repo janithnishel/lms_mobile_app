@@ -6,6 +6,7 @@ import 'package:lms_app/core/repositories/auth_repository.dart';
 import 'package:lms_app/core/services/quiz_repository.dart';
 import 'package:lms_app/logic/quiz/quiz_cubit.dart';
 import 'package:lms_app/logic/quiz/quiz_state.dart';
+import 'package:lms_app/utils/colors.dart';
 // Widgets
 import 'package:lms_app/widgets/quiz_screen/bottom_navigation.dart';
 import 'package:lms_app/widgets/quiz_screen/question_badge.dart';
@@ -77,8 +78,82 @@ class _QuizScreenState extends State<QuizScreen> {
 }
 
 // ---
-// 💻 _QuizView
+// 💻 LMS-Style Time Banner (Continuous when <= 5 minutes, no blink)
 // ---
+
+class _LMSStyleTimeWarning extends StatefulWidget {
+  const _LMSStyleTimeWarning({Key? key}) : super(key: key);
+
+  @override
+  State<_LMSStyleTimeWarning> createState() => _LMSStyleTimeWarningState();
+}
+
+class _LMSStyleTimeWarningState extends State<_LMSStyleTimeWarning>
+    with TickerProviderStateMixin {
+  late AnimationController _blinkController;
+  late Animation<Color?> _colorAnimation;
+
+  @override
+  void initState() {
+    super.initState();
+
+    // Set up background blinking animation (standard LMS style)
+    _blinkController = AnimationController(
+      duration: const Duration(milliseconds: 1000),
+      vsync: this,
+    );
+
+    _colorAnimation =
+        ColorTween(
+          begin: const Color(0xFFFFF3CD), // Light warning yellow
+          end: const Color(0xFFFFE066), // Brighter warning yellow
+        ).animate(
+          CurvedAnimation(parent: _blinkController, curve: Curves.easeInOut),
+        );
+
+    _blinkController.repeat(reverse: true);
+  }
+
+  @override
+  void dispose() {
+    _blinkController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: _colorAnimation,
+      builder: (context, child) {
+        return Container(
+          margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          padding: const EdgeInsets.all(12),
+          decoration: BoxDecoration(
+            color: _colorAnimation.value,
+            borderRadius: BorderRadius.circular(8),
+            border: Border.all(color: const Color(0xFFFFC107), width: 2),
+          ),
+          child: Row(
+            children: [
+              const Icon(Icons.warning, color: Color(0xFFFF8F00), size: 24),
+              const SizedBox(width: 12),
+              Text(
+                'WARNING: Less than 5 minutes remaining!',
+                style: const TextStyle(
+                  color: Color(0xFF8B4513),
+                  fontSize: 14,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+}
+
+// 💻 _QuizView
 
 class _QuizView extends StatefulWidget {
   const _QuizView();
@@ -166,18 +241,65 @@ class _QuizViewState extends State<_QuizView> {
           ],
         ),
         actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
+
+
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+
+            children: [
+
+              Expanded(
+            child: Padding(
+              padding: const EdgeInsets.only(right: 6),
+              child: OutlinedButton(
+                style: OutlinedButton.styleFrom(
+                  backgroundColor: AppColors.lightBackground,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
+                    side: const BorderSide(color: Color(0xFFE5E7EB)),
+                  ),
+                  elevation: 0,
+                  padding: const EdgeInsets.symmetric(vertical: 12),
+                ),
+                onPressed: () => Navigator.pop(context),
+                child: const Text(
+                  'Cancel',
+                  style: TextStyle(color: Colors.black),
+                ),
+              ),
+            ),
           ),
-          ElevatedButton(
-            onPressed: () {
-              Navigator.pop(context);
-              cubit.submitPaper();
-            },
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.blue),
-            child: const Text('Submit'),
+          // Submit button (styled like "Start Paper")
+          Expanded(
+            child: Padding(
+              padding: const EdgeInsets.only(left: 6),
+              child: ElevatedButton(
+                onPressed: () {
+                  Navigator.pop(context);
+                  cubit.submitPaper();
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.lightBlue,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  elevation: 0,
+                  padding: const EdgeInsets.symmetric(vertical: 12),
+                ),
+                child: const Text(
+                  'Submit',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+            ),
           ),
+            ],
+          )
+          // Cancel button (styled like "Back to Papers")
+          
         ],
       ),
     );
@@ -294,6 +416,11 @@ class _QuizViewState extends State<_QuizView> {
 
             body: Column(
               children: [
+                // --- LMS Time Warning: Show when 5 minutes or less remaining ---
+                if (userState.timeRemainingSeconds <= 300) ...[
+                  const _LMSStyleTimeWarning(), // Static banner when < 5 minutes
+                ],
+
                 // --- Status Bar ---
                 Container(
                   padding: const EdgeInsets.all(16),
@@ -319,65 +446,75 @@ class _QuizViewState extends State<_QuizView> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         // 1. 🖼️ Question Image (NOW at the very top, before the text)
-                        if (questionImageUrl != null && questionImageUrl.isNotEmpty)
+                        if (questionImageUrl != null &&
+                            questionImageUrl.isNotEmpty)
                           Padding(
                             padding: const EdgeInsets.only(bottom: 16.0),
                             child: ClipRRect(
                               borderRadius: BorderRadius.circular(10),
-                              child: Builder(builder: (context) {
-
-                                // Compute a stable finalImageUrl and cache it per
-                                // question index so repeated rebuilds don't flood
-                                // the logs and repeatedly re-request the image.
-                                final raw = questionImageUrl;
-                                final int qIndex = currentQuestionIndex;
-                                final String finalImageUrl = _imageUrlCache.putIfAbsent(
-                                  qIndex,
-                                  () => _normalizeImageUrl(raw),
-                                );
-
-                                if (finalImageUrl.isNotEmpty) {
-                                  // ignore: avoid_print
-                                  print('DEBUG: Loading question image -> $finalImageUrl');
-                                }
-
-                                return SizedBox(
-                                  height: 180,
-                                  width: double.infinity,
-                                  child: Image.network(
-                                    finalImageUrl,
-                                    fit: BoxFit.cover,
-                                    loadingBuilder:
-                                        (context, child, loadingProgress) {
-                                      if (loadingProgress == null) return child;
-                                      return Center(
-                                        child: CircularProgressIndicator(
-                                          value: loadingProgress
-                                                      .expectedTotalBytes !=
-                                                  null
-                                              ? loadingProgress
-                                                      .cumulativeBytesLoaded /
-                                                  loadingProgress
-                                                      .expectedTotalBytes!
-                                              : null,
-                                        ),
+                              child: Builder(
+                                builder: (context) {
+                                  // Compute a stable finalImageUrl and cache it per
+                                  // question index so repeated rebuilds don't flood
+                                  // the logs and repeatedly re-request the image.
+                                  final raw = questionImageUrl;
+                                  final int qIndex = currentQuestionIndex;
+                                  final String finalImageUrl = _imageUrlCache
+                                      .putIfAbsent(
+                                        qIndex,
+                                        () => _normalizeImageUrl(raw),
                                       );
-                                    },
-                                    errorBuilder: (context, error, stackTrace) {
-                                      return Container(
-                                        height: 150,
-                                        color: Colors.grey[200],
-                                        child: const Center(
-                                          child: Text(
-                                            'Question Image not available',
-                                            style: TextStyle(color: Colors.red),
-                                          ),
-                                        ),
-                                      );
-                                    },
-                                  ),
-                                );
-                              }),
+
+                                  if (finalImageUrl.isNotEmpty) {
+                                    // ignore: avoid_print
+                                    print(
+                                      'DEBUG: Loading question image -> $finalImageUrl',
+                                    );
+                                  }
+
+                                  return SizedBox(
+                                    height: 180,
+                                    width: double.infinity,
+                                    child: Image.network(
+                                      finalImageUrl,
+                                      fit: BoxFit.cover,
+                                      loadingBuilder:
+                                          (context, child, loadingProgress) {
+                                            if (loadingProgress == null)
+                                              return child;
+                                            return Center(
+                                              child: CircularProgressIndicator(
+                                                value:
+                                                    loadingProgress
+                                                            .expectedTotalBytes !=
+                                                        null
+                                                    ? loadingProgress
+                                                              .cumulativeBytesLoaded /
+                                                          loadingProgress
+                                                              .expectedTotalBytes!
+                                                    : null,
+                                              ),
+                                            );
+                                          },
+                                      errorBuilder:
+                                          (context, error, stackTrace) {
+                                            return Container(
+                                              height: 150,
+                                              color: Colors.grey[200],
+                                              child: const Center(
+                                                child: Text(
+                                                  'Question Image not available',
+                                                  style: TextStyle(
+                                                    color: Colors.red,
+                                                  ),
+                                                ),
+                                              ),
+                                            );
+                                          },
+                                    ),
+                                  );
+                                },
+                              ),
                             ),
                           ),
 

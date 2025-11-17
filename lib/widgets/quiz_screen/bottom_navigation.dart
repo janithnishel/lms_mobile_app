@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:lms_app/utils/colors.dart';
 
 class BottomNavigation extends StatelessWidget {
   final int currentQuestion;
@@ -37,20 +38,57 @@ class BottomNavigation extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              OutlinedButton.icon(
-                // Previous
-                onPressed: currentQuestion > 0 ? previousQuestion : null,
-                icon: const Icon(Icons.arrow_back),
-                label: const Text('Previous'),
+              Expanded(
+                flex: 2,
+                child: Padding(
+                  padding: const EdgeInsets.only(right: 4),
+                  child: OutlinedButton.icon(
+                    // Previous (styled like "Back to Papers" button)
+                    onPressed: currentQuestion > 0 ? previousQuestion : null,
+                    icon: const Icon(Icons.arrow_back),
+                    label: const Text('Previous'),
+                    style: OutlinedButton.styleFrom(
+                      backgroundColor: AppColors.lightBackground,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                        side: const BorderSide(color: Color(0xFFE5E7EB)),
+                      ),
+                      elevation: 0,
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                    ),
+                  ),
+                ),
               ),
-              Text('Question ${currentQuestion + 1} of $totalQuestions'),
-              ElevatedButton.icon(
-                // Next
-                onPressed: currentQuestion < totalQuestions - 1
-                    ? nextQuestion
-                    : null,
-                icon: const Icon(Icons.arrow_forward),
-                label: const Text('Next'),
+              Expanded(
+                flex: 3,
+                child: Center(
+                  child: Text(
+                    'Question ${currentQuestion + 1} of $totalQuestions',
+                    style: const TextStyle(fontWeight: FontWeight.w500),
+                  ),
+                ),
+              ),
+              Expanded(
+                flex: 2,
+                child: Padding(
+                  padding: const EdgeInsets.only(left: 4),
+                  child: ElevatedButton.icon(
+                    // Next (styled like "Start Paper" button)
+                    onPressed: currentQuestion < totalQuestions - 1
+                        ? nextQuestion
+                        : null,
+                    icon: const Icon(Icons.arrow_forward, color: Colors.white),
+                    label: const Text('Next',style: TextStyle(color: Colors.white),),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.lightBlue,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      elevation: 0,
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                    ),
+                  ),
+                ),
               ),
             ],
           ),
@@ -59,8 +97,23 @@ class BottomNavigation extends StatelessWidget {
             width: double.infinity,
             child: ElevatedButton(
               onPressed: showSubmitConfirmationDialog,
-              // Submit Exam Paper
-              child: const Text('Submit Exam Paper'),
+              // Submit Exam Paper (styled like "Start Paper" button)
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.green,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                elevation: 0,
+                padding: const EdgeInsets.symmetric(vertical: 15),
+              ),
+              child:  Text(
+                'Submit Exam Paper',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.w600,
+                  fontSize: 17
+                ),
+              ),
             ),
           ),
           const SizedBox(height: 8),

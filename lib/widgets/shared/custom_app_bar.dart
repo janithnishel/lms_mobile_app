@@ -31,7 +31,7 @@ class CustomAppBar extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                'EduForm',
+                "ezyICT LMS",
                 style: TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
@@ -39,11 +39,11 @@ class CustomAppBar extends StatelessWidget {
                 ),
               ),
               Text(
-                'A-Level Learning Portal',
+                'Student Portal',
                 style: TextStyle(
                   fontSize: 11,
                   color: Colors.grey,
-                  fontWeight: FontWeight.normal,
+                  fontWeight: FontWeight.w500,
                 ),
               ),
             ],

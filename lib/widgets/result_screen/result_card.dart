@@ -407,9 +407,11 @@ class ResultCard extends StatelessWidget {
             ),
           ),
 
-          // Progress Bar
-          Container(
+          // Progress Bar with Animation
+          AnimatedContainer(
             height: 12, // Increased from 6 to 12 for better visibility
+            duration: const Duration(milliseconds: 800),
+            curve: Curves.easeInOut,
             decoration: BoxDecoration(
               color: Colors.grey[200],
               borderRadius: const BorderRadius.only(
@@ -417,9 +419,11 @@ class ResultCard extends StatelessWidget {
                 bottomRight: Radius.circular(16),
               ),
             ),
-            child: FractionallySizedBox(
+            child: AnimatedFractionallySizedBox(
               alignment: Alignment.centerLeft,
-              widthFactor: progressValue,
+              widthFactor: progressValue.clamp(0.0, 1.0),
+              duration: const Duration(milliseconds: 1200),
+              curve: Curves.elasticOut,
               child: Container(
                 decoration: BoxDecoration(
                   color: progressValue >= 0.7
@@ -431,6 +435,18 @@ class ResultCard extends StatelessWidget {
                     bottomLeft: Radius.circular(16),
                     bottomRight: Radius.circular(16),
                   ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: (progressValue >= 0.7
+                              ? Colors.green
+                              : progressValue >= 0.4
+                              ? Colors.orange
+                              : Colors.red)
+                          .withOpacity(0.3),
+                      blurRadius: 6,
+                      offset: const Offset(0, 2),
+                    ),
+                  ],
                 ),
               ),
             ),
