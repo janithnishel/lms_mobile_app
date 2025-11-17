@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
 import 'dart:async';
 
 import 'package:lms_app/utils/colors.dart';
@@ -20,7 +19,7 @@ class _SplashScreenState extends State<SplashScreen>
   void initState() {
     super.initState();
     // 💡 App Loading Logic
-    _initializeApp();
+    // _initializeApp();
     // Animation controller (controls time)
     _controller = AnimationController(
       vsync: this,
@@ -34,9 +33,9 @@ class _SplashScreenState extends State<SplashScreen>
     ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeInOut));
 
     // Optional: After splash, navigate to next screen
-    Timer(const Duration(seconds: 4), () {
-      // Navigator.pushReplacement(...)
-    });
+    // Timer(const Duration(seconds: 4), () {
+    //   // Navigator.pushReplacement(...)
+    // });
   }
 
   @override
@@ -45,13 +44,7 @@ class _SplashScreenState extends State<SplashScreen>
     super.dispose();
   }
 
-  // Initialization Logic (Delay)
-  void _initializeApp() async {
-    await Future.delayed(const Duration(seconds: 10));
-
-    if (!mounted) return;
-    context.go('/');
-  }
+ 
 
   @override
   Widget build(BuildContext context) {

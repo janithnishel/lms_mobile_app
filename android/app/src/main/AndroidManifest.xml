@@ -1,9 +1,17 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+<uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"/>
+<uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
+<uses-permission android:name="android.permission.CAMERA"/>
+<!-- Android 13+: more granular media permissions -->
+<uses-permission android:name="android.permission.READ_MEDIA_IMAGES"/>
     <application
         android:label="lms_app"
         android:name="${applicationName}"
-        android:icon="@mipmap/ic_launcher">
-        <activity
+        android:icon="@mipmap/ic_launcher"
+        android:usesCleartextTraffic="true"
+        android:enableOnBackInvokedCallback="true">
+         <activity
             android:name=".MainActivity"
             android:exported="true"
             android:launchMode="singleTop"

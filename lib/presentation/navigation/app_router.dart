@@ -1,15 +1,22 @@
+// import 'dart:async';
+
 import 'dart:async';
 
+import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 import 'package:go_router/go_router.dart';
 import 'package:lms_app/logic/auth/auth_cubit.dart';
 import 'package:lms_app/logic/auth/auth_state.dart';
+import 'package:lms_app/models/paper_intro_details_model.dart';
+import 'package:lms_app/screens/assignment/paper_instruction_screen.dart';
 import 'package:lms_app/screens/assignment/quiz_screen.dart';
+import 'package:lms_app/screens/assignment/results_screen.dart';
+import 'package:lms_app/screens/assignment/see_answers_screen.dart';
 import 'package:lms_app/screens/auth/login_screen.dart';
 import 'package:lms_app/screens/auth/register_screen.dart';
-import 'package:lms_app/screens/home/home_screen.dart';
 import 'package:lms_app/screens/onboarding/onboarding_screen_one.dart';
 import 'package:lms_app/screens/splash/splash_screen.dart';
+import 'package:lms_app/widgets/main_screen.dart';
 
 // 💡 සියලුම App Routes (Paths)
 abstract class AppRoutes {
@@ -17,8 +24,9 @@ abstract class AppRoutes {
   static const onboarding = '/onboarding';
   static const register = '/register';
   static const login = '/login';
-  static const home = '/home';
-  static const quiz = '/quiz';
+  static const mainscreen = '/mainscreen';
+  static const paperInstruction = '/paperInstruction';
+  static const paperQuiz = '/paperQuiz';
 }
 
 class AppRouter {
@@ -30,18 +38,24 @@ class AppRouter {
         // ⚠️ Auth Cubit State එක වෙනස් වෙද්දී router එක update කරන්න
         refreshListenable: GoRouterRefreshStream(authCubit.stream),
         initialLocation: AppRoutes.splash,
+        // 🚨 DEBUGGING සඳහා මෙය සක්‍රිය කරන්න
+        debugLogDiagnostics: true,
 
         // 🔑 ප්‍රධාන Navigation Logic එක
         redirect: (BuildContext context, GoRouterState state) {
           final status = authCubit.state.status;
           final isOnboarded = authCubit.state.isOnboarded;
+          // state.matchedLocation යනු යාමට උත්සාහ කරන path එකයි.
           final path = state.matchedLocation;
 
-          // 💡 Login/Register Flow එක අතරතුර Splash Flash එක වැලක්වීමට
-          // if (status == AuthStatus.loading &&
-          //     (path == AppRoutes.login || path == AppRoutes.register)) {
-          //   return null;
-          // }
+          // ------------------------------------------------------------------
+          // Routes ලයිස්තුව: Auth නොමැතිව යා හැකි Pages
+          // ------------------------------------------------------------------
+          final bool isPublicPath =
+              path == AppRoutes.splash ||
+              path == AppRoutes.onboarding ||
+              path == AppRoutes.login ||
+              path == AppRoutes.register;
 
           // ------------------------------------------------------------------
           // 1. INITIAL/SPLASH (Token පරීක්ෂා කරනවා)
@@ -52,27 +66,34 @@ class AppRouter {
           }
 
           // ------------------------------------------------------------------
-          // 2. AUTHENTICATED (LOGGED IN)
+          // 2. AUTHENTICATED (LOGGED IN) - 🔑 FIX එක මෙතන
           // ------------------------------------------------------------------
           if (status == AuthStatus.authenticated) {
-            // 🔑 Home Screen එකට යවන්න (Home එකේ නම් එතනම ඉන්න)
-            return path == AppRoutes.home ? null : AppRoutes.home;
-          }
-
-          if (status == AuthStatus.unauthenticated) {
-            // 🎯 FIX: යම්කිසි හේතුවක් නිසා user දැනටමත් Onboarding, Register, හෝ Login Screen එකක සිටී නම්,
-            // (උදාහරණ: Login Fail වීම නිසා) එතනින් වෙන තැනකට යවන්නේ නැහැ.
-            final isAuthPath =
-                path == AppRoutes.login || path == AppRoutes.register;
-            final isOnboardingPath = path == AppRoutes.onboarding;
-
-            if (isAuthPath || isOnboardingPath) {
-              // ➡️ Login Failed නම්, Login Screen එකේම ඉන්නවා (නැවත Onboarding යන්නේ නැහැ)
-              return null;
+            // Logged in user කෙනෙක් Public (Splash, Login, Register, Onboarding) pages වලට යන්න උත්සාහ කරනවා නම්,
+            // ඊට ඉඩ නොදී Home එකටම Redirect කරන්න.
+            if (isPublicPath) {
+              return AppRoutes.mainscreen;
             }
 
-            // 3A. User වෙනත් තැනක (Home වැනි ආරක්ෂිත තැනක) ඉඳලා Log Out උනා නම්
+            // ➡️ allow going to all other routes (like Home, Quiz)
+            return null;
+          }
 
+          // ------------------------------------------------------------------
+          // 3. UNAUTHENTICATED (LOGGED OUT)
+          // ------------------------------------------------------------------
+          if (status == AuthStatus.unauthenticated) {
+            // User Public Path එකක (Login, Onboarding) නම්, එතනම ඉන්න ඉඩ දෙන්න
+            if (isPublicPath) {
+              // නමුත් Splash වලින් ඉවත් කළ යුතුයි
+              if (path == AppRoutes.splash) {
+                // if Onboarding not seen, send to Onboarding
+                return isOnboarded ? AppRoutes.login : AppRoutes.onboarding;
+              }
+              return null; // Login/Register/Onboarding වලට ඉඩ දෙන්න
+            }
+
+            // User ආරක්ෂිත (Protected) තැනක (Home, Quiz) නම්, Redirect කරන්න
             // Onboarding බලලා නැත්නම් (New Device)
             if (!isOnboarded) {
               return AppRoutes.onboarding;
@@ -82,7 +103,7 @@ class AppRouter {
             return AppRoutes.login;
           }
 
-          // 💡 වෙනත් කිසිදු තත්ත්වයකට අසුවන්නේ නැතිනම්, කිසිදු Redirect එකක් නැත.
+          // 💡 If no other condition matches, no redirect.
           return null;
         },
         // ------------------------------------------------------------------
@@ -110,14 +131,89 @@ class AppRouter {
             builder: (context, state) => const LoginScreen(),
           ),
           GoRoute(
-            path: AppRoutes.home,
-            name: 'home',
-            builder: (context, state) => const HomeScreen(),
+            path: AppRoutes.mainscreen,
+            name: 'mainscreen',
+            builder: (context, state) => const MainScreen(),
+          ),
+
+          GoRoute(
+            path: '/paper_instructions',
+            name: 'paperInstruction',
+            builder: (context, state) {
+              // extra parameter එකෙන් PaperIntroDetails object එක retrieve කිරීම
+              final PaperIntroDetailsModel details =
+                  state.extra as PaperIntroDetailsModel;
+              return PaperInstructionScreen(details: details);
+            },
           ),
           GoRoute(
-            path: AppRoutes.quiz,
-            name: 'quiz',
-            builder: (context, state) => const QuizScreen(),
+            path: '/quiz/:paperId', // 'paperQuiz' නමින් ඔබ කලින් දුන් route එක
+            name: 'paperQuiz',
+            builder: (context, state) {
+              final String paperId = state.pathParameters['paperId']!;
+              return QuizScreen(paperId: paperId);
+            },
+          ),
+          // 🔑 මෙය ඔබේ main GoRouter config එකට එකතු කරන්න
+          GoRoute(
+            path: '/results/:resultId',
+            name: 'results', // Quiz Screen එකෙන් call කරන්නේ මේ නමෙන්
+            builder: (BuildContext context, GoRouterState state) {
+              // Since ResultsScreen is top-level/fetch-all, resultId/resultData
+              // are often ignored here, but we keep the structure.
+              // final String resultId = state.pathParameters['resultId']!;
+              // final resultData = state.extra as Map<String, dynamic>?;
+
+              return const ResultsScreen();
+            },
+          ),
+
+          GoRoute(
+            path: '/see-answers/:paperId',
+            name: 'see-answers',
+            builder: (BuildContext context, GoRouterState state) {
+              final paperId = state.pathParameters['paperId'] ?? 'N/A';
+
+              // The full attempt data object (Map) is expected to be passed via 'extra'
+              final attemptData = state.extra as Map<String, dynamic>?;
+
+              if (attemptData == null || paperId == 'N/A') {
+                return const Scaffold(
+                  body: Center(
+                    child: Text(
+                      'Error: Attempt data or Paper ID missing for review.',
+                    ),
+                  ),
+                );
+              }
+
+              // --- FIX: Robust Paper Title Extraction Logic ---
+              String title = 'Review Answers';
+
+              // 1. Check for 'paperTitle' key (simplest case)
+              if (attemptData['paperTitle'] is String &&
+                  (attemptData['paperTitle'] as String).isNotEmpty) {
+                title = attemptData['paperTitle'] as String;
+              }
+              // 2. Check for 'paperId' or 'paper' object and extract its title
+              else {
+                final paperObj = attemptData['paperId'] ?? attemptData['paper'];
+                if (paperObj is Map &&
+                    paperObj['title'] is String &&
+                    (paperObj['title'] as String).isNotEmpty) {
+                  title = paperObj['title'] as String;
+                }
+              }
+
+              final paperTitle = title;
+              // --- END FIX ---
+
+              return SeeAnswersScreen(
+                attemptData: attemptData,
+                paperId: paperId,
+                paperTitle: paperTitle,
+              );
+            },
           ),
         ],
       );

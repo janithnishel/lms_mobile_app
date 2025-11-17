@@ -1,0 +1,164 @@
+import 'package:lms_app/core/services/see_answers_api_service.dart';
+import 'package:lms_app/models/see_answers_model.dart';
+import 'package:lms_app/core/errors/exception.dart';
+
+class SeeAnswersRepository {
+  final SeeAnswersApiService _apiService;
+
+  SeeAnswersRepository(this._apiService);
+
+  String _formatTime(num timeInSeconds) {
+    final minutes = (timeInSeconds.toInt() / 60).floor();
+    final seconds = timeInSeconds.toInt() % 60;
+    return minutes > 0 ? '$minutes min $seconds sec' : '$seconds sec';
+  }
+
+  int _parseInt(dynamic value, int defaultValue) {
+    if (value == null) return defaultValue;
+    if (value is num) return value.toInt();
+    if (value is String) {
+      return int.tryParse(value) ?? defaultValue;
+    }
+    return defaultValue;
+  }
+
+  // Main method that the cubit calls
+  Future<ReviewData> getReviewData({
+    required String attemptId,
+    required Map<String, dynamic> localAttemptData,
+    required String paperTitle,
+  }) async {
+    print('DEBUG SeeAnswersRepository: getReviewData called with attemptId=$attemptId, title=$paperTitle');
+    print('DEBUG SeeAnswersRepository: localAttemptData keys: ${localAttemptData.keys}');
+    // Extract paperId from attempt data
+    final paperId = (localAttemptData['paperId'] is Map
+        ? localAttemptData['paperId']['_id']?.toString()
+        : localAttemptData['paperId']?.toString()) ??
+        '';
+
+    if (paperId.isEmpty) {
+      throw Exception('Paper ID not found in attempt data');
+    }
+
+    // Fetch paper data with answers from API
+    final responseData = await _apiService.fetchReviewData(paperId, attemptId);
+    print('DEBUG: API responseData keys: ${responseData.keys}');
+    print('DEBUG: API responseData: $responseData');
+    final paperData = (responseData['paper'] as Map<String, dynamic>);
+
+    // Parse data from both sources
+    return _createReviewData(localAttemptData, paperData, paperTitle);
+  }
+
+  ReviewData _createReviewData(
+    Map<String, dynamic> attemptData,
+    Map<String, dynamic> paperData,
+    String paperTitle,
+  ) {
+    print('DEBUG _createReviewData: paperData keys=${paperData.keys}');
+    print('DEBUG _createReviewData: paperData=${paperData}');
+    // 1. Create attempt summary
+    final score = _parseInt(attemptData['score'], 0);
+    final totalQuestions = _parseInt(attemptData['totalQuestions'], 0);
+    final timeSpent = attemptData['timeSpent'] as num? ?? 0;
+    final percentage = totalQuestions > 0 ? (score / totalQuestions) * 100 : 0.0;
+
+    final summary = AttemptSummary(
+      score: score,
+      totalQuestions: totalQuestions,
+      percentage: percentage,
+      timeSpent: _formatTime(timeSpent),
+    );
+
+    // 2. Create paper details
+    final paperObj = paperData.isNotEmpty ? paperData : (attemptData['paperId'] ?? {});
+    final description = paperObj is Map
+        ? (paperObj['description'] ?? attemptData['paperDescription'] ?? '')
+        : (attemptData['paperDescription'] ?? '');
+
+    final paperDetails = PaperDetails(
+      title: paperTitle,
+      description: description.toString(),
+    );
+
+    // 3. Create questions list by merging data
+    final List<QuestionData> questions = [];
+
+    if (paperData.isNotEmpty) {
+      final paperQuestions = paperData['questions'] as List<dynamic>? ?? [];
+
+      // Create map of user's answers
+      final userAnswers = (attemptData['answers'] as List<dynamic>? ?? []);
+      final Map<String, dynamic> answerMap = {};
+      for (var answer in userAnswers) {
+        if (answer is Map && answer['questionId'] != null) {
+          answerMap[answer['questionId'].toString()] = answer;
+        }
+      }
+
+      for (var question in paperQuestions) {
+        if (question is Map) {
+          final Map<String, dynamic> q = Map<String, dynamic>.from(question);
+          final questionId = q['_id']?.toString() ?? '';
+          final userAnswer = answerMap[questionId];
+
+          questions.add(_createQuestionData(q, userAnswer));
+        }
+      }
+    }
+
+    return ReviewData(
+      summary: summary,
+      paperDetails: paperDetails,
+      questions: questions,
+    );
+  }
+
+  QuestionData _createQuestionData(Map<String, dynamic> question, dynamic userAnswer) {
+    final questionText = question['questionText'] ?? question['text'] ?? '';
+
+    final options = question['options'] as List<dynamic>? ?? [];
+    final optionTexts = options.map((opt) => opt is Map ? opt['text']?.toString() ?? '' : opt.toString()).toList();
+
+    // Find correct answer index
+    int correctIndex = -1;
+    for (int i = 0; i < options.length; i++) {
+      if (options[i] is Map && (options[i]['isCorrect'] == true || options[i]['correct'] == true)) {
+        correctIndex = i;
+        break;
+      }
+    }
+
+    // Find user's answer index
+    int userIndex = -2;
+    if (userAnswer != null && userAnswer is Map) {
+      final selectedOptionId = userAnswer['selectedOptionId']?.toString();
+      if (selectedOptionId != null) {
+        for (int i = 0; i < options.length; i++) {
+          if (options[i] is Map && options[i]['_id']?.toString() == selectedOptionId) {
+            userIndex = i;
+            break;
+          }
+        }
+      }
+    }
+
+    // Extract explanation
+    String? explanation;
+    String? visualUrl;
+    final explanationObj = question['explanation'];
+    if (explanationObj is Map) {
+      explanation = explanationObj['text']?.toString();
+      visualUrl = explanationObj['imageUrl']?.toString();
+    }
+
+    return QuestionData(
+      questionText: questionText.toString(),
+      options: optionTexts,
+      correctAnswerIndex: correctIndex,
+      userAnswerIndex: userIndex,
+      explanation: explanation,
+      visualExplanationUrl: visualUrl,
+    );
+  }
+}

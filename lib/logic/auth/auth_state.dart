@@ -1,32 +1,34 @@
 import 'package:equatable/equatable.dart';
-import 'package:lms_app/data/models/user_model.dart';
+import 'package:lms_app/models/user_model.dart';
 
+// Auth Status පෙන්වන Enums
 enum AuthStatus {
-  initial, // Token check කරනවා
-  authenticated,
-  unauthenticated,
-  loading,
+  initial, // Splash screen එකේදී Token check කරනවා
+  authenticated, // Logged in
+  unauthenticated, // Logged out
+  loading, // Operation එකක් සිදු වෙමින් පවතී
 }
 
 class AuthState extends Equatable {
   final AuthStatus status;
   final String? errorMessage;
   final bool isOnboarded;
-  final User? user; // 💡 අලුතින් එකතු කළා
+  final UserModel? user; // Logged in User ගේ data
 
   const AuthState({
     this.status = AuthStatus.initial,
     this.errorMessage,
-    this.isOnboarded = false,
-    this.user, // 💡 default false
+    this.isOnboarded = false, // Default: Onboarding සම්පූර්ණ කර නැත
+    this.user,
   });
 
   AuthState copyWith({
     AuthStatus? status,
     String? errorMessage,
     bool? isOnboarded,
-    User? user, // 💡 copyWith එකට එකතු කළා
+    UserModel? user,
   }) {
+    // errorMessage: null ලබා දීමෙන් Error එක clear කළ හැක
     return AuthState(
       status: status ?? this.status,
       errorMessage: errorMessage,
@@ -36,5 +38,5 @@ class AuthState extends Equatable {
   }
 
   @override
-  List<Object?> get props => [status, errorMessage, isOnboarded, user]; // 💡 props වලට එකතු කළා
+  List<Object?> get props => [status, errorMessage, isOnboarded, user];
 }

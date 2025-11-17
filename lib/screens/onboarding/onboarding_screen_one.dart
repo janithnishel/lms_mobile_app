@@ -22,7 +22,7 @@
 //     // Skip/Get Started Logic
 //     void handleNavigation() {
 //       // 1. Cubit update:
-//       // 💡 මෙය isRegistered = true කරයි
+//       // This sets isRegistered = true
 //       context.read<AuthCubit>().setOnboardingSeen();
 
 //       // 2. Register Page එකට යන්න. (router.dart එකේ 'register' name එක තිබිය යුතුය)
@@ -40,7 +40,7 @@
 //               child: Align(
 //                 alignment: Alignment.topRight,
 //                 child: TextButton(
-//                   onPressed: handleNavigation, // Skip කිරීමත් Registration වෙත යයි
+//                   onPressed: handleNavigation, // Skipping also goes to Registration
 //                   child: Text(
 //                     'Skip',
 //                     style: theme.textTheme.titleMedium?.copyWith(
@@ -106,13 +106,13 @@
 //                   ElevatedButton(
 //                     onPressed: () {
 //                       if (_currentPage < _pageCount - 1) { // 1 වෙනුවට _pageCount - 1 යොදන්න
-//                         // Next Page එකට Swipe කරන්න
+//                         // Swipe to Next Page
 //                         _pageController.nextPage(
 //                           duration: const Duration(milliseconds: 400),
 //                           curve: Curves.easeIn,
 //                         );
 //                       } else {
-//                         // අවසාන Page එකේ නම්, Register Page එකට යන්න
+//                         // If it's the last Page, go to Register Page
 //                         handleNavigation();
 //                       }
 //                     },
@@ -253,7 +253,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
 
   void _handleNavigation() {
     // 1. Cubit update:
-    // 💡 මෙය isRegistered = true කරයි
+    // This sets isRegistered = true
     context.read<AuthCubit>().completeOnboarding();
 
     // 2. Register Page එකට යන්න. (router.dart එකේ 'register' name එක තිබිය යුතුය)
