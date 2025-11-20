@@ -147,21 +147,36 @@ class QuizRepository {
   }
 
   // ----------------------------------------------------------------------
-  // 4. Fetch All Exam Papers for the List View
+  // 4. Fetch All Exam Papers for the List View (Updated for tabs functionality)
   // ----------------------------------------------------------------------
-  Future<List<ExamPaperCardModel>> fetchAllExamPapers() async {
-    final url = Uri.parse('$_BASE_API_URL/api/papers/');
+  Future<Map<String, dynamic>> fetchAllExamPapersWithStatus() async {
+    final url = Uri.parse('$_BASE_API_URL/api/papers/student/all');
     final response = await http.get(url, headers: _HEADERS);
 
     if (response.statusCode == 200) {
       final Map<String, dynamic> data = json.decode(response.body);
       final List paperList = data['papers'] as List? ?? [];
 
-      return paperList
+      // More defensive casting for attemptedPapers array
+      final List<dynamic> attemptedPapersList = (data['attemptedPapers'] as List?) ?? [];
+      final List<String> attemptedPapers = attemptedPapersList
+          .where((id) => id != null)  // Filter out null values
+          .map((id) => id.toString())
+          .toList();
+
+      final List<ExamPaperCardModel> papers = paperList
+          .where((item) => item != null) // Filter out null papers
           .map(
             (json) => _transformToExamPaperCard(json as Map<String, dynamic>),
           )
+          .where((model) => model != null) // Filter out failed transformations
+          .whereType<ExamPaperCardModel>() // Ensure correct type
           .toList();
+
+      return {
+        'papers': papers,
+        'attemptedPapers': attemptedPapers,
+      };
     } else if (response.statusCode == 401) {
       // 🔑 Handle 401 Unauthorized Error
       throw Exception('Invalid Token: Not authorized to load list.');
@@ -174,18 +189,52 @@ class QuizRepository {
     }
   }
 
+  // Get specific student attempt for a paper
+  Future<Map<String, dynamic>?> fetchStudentAttemptForPaper(String paperId) async {
+    final url = Uri.parse('$_BASE_API_URL/api/papers/$paperId/attempt');
+    final response = await http.get(url, headers: _HEADERS);
+
+    if (response.statusCode == 200) {
+      final Map<String, dynamic> data = json.decode(response.body);
+      final attemptData = data['studentAttempt'] as Map<String, dynamic>?;
+      return attemptData;
+    } else if (response.statusCode == 404) {
+      // No attempt found for this paper - this is expected for papers that haven't been attempted
+      return null;
+    } else if (response.statusCode == 401) {
+      throw Exception('Invalid Token: Please login again.');
+    } else {
+      final errorBody = json.decode(response.body);
+      throw Exception(
+        errorBody['message'] ?? 'Failed to get attempt data: ${response.statusCode}',
+      );
+    }
+  }
+
+  // Legacy method for backward compatibility
+  Future<List<ExamPaperCardModel>> fetchAllExamPapers() async {
+    final result = await fetchAllExamPapersWithStatus();
+    return result['papers'] as List<ExamPaperCardModel>;
+  }
+
   // ----------------------------------------------------------------------
   // Data Transformation Function
   // ----------------------------------------------------------------------
 
-  ExamPaperCardModel _transformToExamPaperCard(Map<String, dynamic> json) {
-    final paperId = json['_id'] as String;
-    final title = json['title'] as String;
+  ExamPaperCardModel? _transformToExamPaperCard(Map<String, dynamic> json) {
+    // Defensive null checking for required fields
+    if (json['_id'] == null || json['title'] == null || json['deadline'] == null) {
+      print('QUIZ REPO: Skipping paper with missing required fields: _id=${json['_id']}, title=${json['title']}, deadline=${json['deadline']}');
+      return null; // This will be filtered out
+    }
+
+    final paperId = json['_id'].toString();
+    final title = json['title'].toString();
     final description =
-        json['description'] as String? ?? 'No description provided.';
+        json['description']?.toString() ?? 'No description provided.';
     final totalQuestions = json['totalQuestions'] as int? ?? 0;
     final timeLimitMinutes = json['timeLimit'] as int? ?? 0;
-    final deadline = DateTime.parse(json['deadline'] as String);
+    final deadline = DateTime.tryParse(json['deadline'].toString()) ?? DateTime.now();
 
     final Map<String, dynamic>? attempt =
         json['attempt'] as Map<String, dynamic>?;
@@ -233,6 +282,7 @@ class QuizRepository {
       isCompleted: isCompleted,
       studentScorePercentage: isCompleted ? '${attempt!['score']}%' : null,
       studentStatus: attempt?['status'] as String?,
+      paperType: json['paperType'] as String? ?? 'MCQ',
     );
   }
 }

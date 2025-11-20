@@ -7,6 +7,7 @@ class ExamPaperModel {
   final int totalQuestions;
   final int timeLimitMinutes; // Corresponds to Backend 'timeLimit'
   final DateTime deadline; // Corresponds to Backend 'deadline'
+  final String paperType; // MCQ or Structure
 
   const ExamPaperModel({
     required this.id,
@@ -15,6 +16,7 @@ class ExamPaperModel {
     required this.totalQuestions,
     required this.timeLimitMinutes,
     required this.deadline,
+    required this.paperType,
   });
 
   factory ExamPaperModel.fromJson(Map<String, dynamic> json) {
@@ -24,7 +26,8 @@ class ExamPaperModel {
       description: json['description'] as String?,
       totalQuestions: json['totalQuestions'] as int,
       timeLimitMinutes: json['timeLimit'] as int,
-      deadline: DateTime.parse(json['deadline'] as String), 
+      deadline: DateTime.parse(json['deadline'] as String),
+      paperType: json['paperType'] as String,
     );
   }
 }

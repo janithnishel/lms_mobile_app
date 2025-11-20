@@ -1,6 +1,19 @@
 import 'package:lms_app/models/exam_paper_card_model.dart';
 
 // ----------------------------------------------------------------------
+// Data Models (for tab filtering)
+// ----------------------------------------------------------------------
+class AssignmentDataWithStatus {
+  final List<ExamPaperCardModel> papers;
+  final List<String> attemptedPapers;
+
+  AssignmentDataWithStatus({
+    required this.papers,
+    required this.attemptedPapers,
+  });
+}
+
+// ----------------------------------------------------------------------
 // A. Abstract State
 // ----------------------------------------------------------------------
 
@@ -21,6 +34,12 @@ class AssignmentsLoading extends AssignmentsState {}
 class AssignmentsLoaded extends AssignmentsState {
   final List<ExamPaperCardModel> papers;
   AssignmentsLoaded(this.papers);
+}
+
+/// Data loaded successfully with attempted papers status (for tab filtering)
+class AssignmentsWithStatusLoaded extends AssignmentsState {
+  final AssignmentDataWithStatus data;
+  AssignmentsWithStatusLoaded(this.data);
 }
 
 /// Error occurred while loading data

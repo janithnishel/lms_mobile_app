@@ -8,18 +8,19 @@ import 'package:lms_app/models/exam_paper_model.dart'; // Core Model එක Impo
 // ExamPaperCardModel - UI Display Model (Assignments Card)
 // -------------------------------------------------------------------------
 class ExamPaperCardModel {
-  final String id; 
+  final String id;
   final String title;
   final String description;
   final int totalQuestions;
-  final int timeLimitMinutes; 
-  final String dueDateDisplay; 
-  final String timeLeftDisplay; 
-  final Color timeLeftColor; 
-  final bool isAvailableToStart; 
-  final bool isCompleted; 
-  final String? studentScorePercentage; 
-  final String? studentStatus; 
+  final int timeLimitMinutes;
+  final String dueDateDisplay;
+  final String timeLeftDisplay;
+  final Color timeLeftColor;
+  final bool isAvailableToStart;
+  final bool isCompleted;
+  final String? studentScorePercentage;
+  final String? studentStatus;
+  final String paperType; // MCQ or Structure
 
   const ExamPaperCardModel({
     required this.id,
@@ -34,6 +35,7 @@ class ExamPaperCardModel {
     required this.isCompleted,
     this.studentScorePercentage,
     this.studentStatus,
+    required this.paperType,
   });
 
   factory ExamPaperCardModel.fromApiPaper(
@@ -106,16 +108,17 @@ class ExamPaperCardModel {
       description: paper.description ?? 'No description provided.',
       totalQuestions: paper.totalQuestions,
       timeLimitMinutes: paper.timeLimitMinutes,
-      
+
       dueDateDisplay: dueDateDisplay,
       timeLeftDisplay: timeLeftDisplay,
       timeLeftColor: timeLeftColor,
-      
+
       isAvailableToStart: isAvailableForAction || isStarted,
       isCompleted: isCompleted,
-      
+
       studentScorePercentage: score,
       studentStatus: status,
+      paperType: paper.paperType ?? 'MCQ', // Default to MCQ if not provided
     );
   }
 }

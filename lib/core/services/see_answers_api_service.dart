@@ -117,4 +117,31 @@ class SeeAnswersApiService {
       );
     }
   }
+
+  /// Generic method to make authenticated HTTP requests
+  Future<dynamic> makeRequest(String url, {String method = 'GET', Map<String, dynamic>? data}) async {
+    try {
+      final response = method == 'GET'
+          ? await _dio.get(url)
+          : await _dio.post(url, data: data);
+
+      if (response.statusCode == 200) {
+        return response;
+      } else {
+        throw ServerException(
+          message: 'Request failed: ${response.statusCode}',
+          statusCode: response.statusCode ?? 500,
+        );
+      }
+    } catch (e) {
+      if (e is DioException) {
+        throw ServerException(
+          message: e.message ?? 'Network error',
+          statusCode: e.response?.statusCode ?? 503,
+        );
+      } else {
+        throw UnknownException(message: 'Request error: $e');
+      }
+    }
+  }
 }

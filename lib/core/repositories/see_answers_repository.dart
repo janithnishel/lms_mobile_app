@@ -50,13 +50,43 @@ class SeeAnswersRepository {
     return _createReviewData(localAttemptData, paperData, paperTitle);
   }
 
+  /// Fetch student attempt data for a specific paper
+  Future<Map<String, dynamic>?> fetchStudentAttemptForPaper(String paperId) async {
+    try {
+      // Use the API service to make the call with authentication
+      final url = '/api/papers/$paperId/attempt';
+      final response = await _apiService.makeRequest(url, method: 'GET');
+
+      if (response.statusCode == 200) {
+        final Map<String, dynamic> data = response.data as Map<String, dynamic>;
+        final attemptData = data['studentAttempt'] as Map<String, dynamic>?;
+        return attemptData;
+      } else if (response.statusCode == 404) {
+        // No attempt found for this paper - this is expected for papers that haven't been attempted
+        return null;
+      } else {
+        throw ServerException(
+          message: 'Failed to get attempt data: ${response.statusCode}',
+          statusCode: response.statusCode ?? 500,
+        );
+      }
+    } catch (e) {
+      if (e is ServerException) {
+        throw e;
+      }
+      throw ServerException(
+        message: 'Error fetching attempt data: $e',
+        statusCode: 500,
+      );
+    }
+  }
+
   ReviewData _createReviewData(
     Map<String, dynamic> attemptData,
     Map<String, dynamic> paperData,
     String paperTitle,
   ) {
     print('DEBUG _createReviewData: paperData keys=${paperData.keys}');
-    print('DEBUG _createReviewData: paperData=${paperData}');
     // 1. Create attempt summary
     final score = _parseInt(attemptData['score'], 0);
     final totalQuestions = _parseInt(attemptData['totalQuestions'], 0);
@@ -119,15 +149,12 @@ class SeeAnswersRepository {
     final rawImageUrl = question['imageUrl'] ?? '';
     String? imageUrl;
     if (rawImageUrl.isNotEmpty) {
-      // If it's already a full URL, use as is, otherwise prepend base URL
       imageUrl = rawImageUrl.startsWith('http')
           ? rawImageUrl
           : 'http://10.0.2.2:5000$rawImageUrl';
     }
-    print('DEBUG _createQuestionData: question has imageUrl field? ${question.containsKey('imageUrl')}, raw: $rawImageUrl, processed: $imageUrl');
 
     final options = question['options'] as List<dynamic>? ?? [];
-    // Filter out invalid/empty options like quiz screen does - keep only options with meaningful text
     final filteredOptions = options.where((opt) => opt is Map).where((opt) {
       final text = opt['text']?.toString() ?? '';
       final choiceText = opt['optionText']?.toString() ?? '';
@@ -139,11 +166,9 @@ class SeeAnswersRepository {
 
     // Find correct answer index in filtered options
     int correctIndex = -1;
-    String? correctOptionId;
     for (int i = 0; i < filteredOptions.length; i++) {
       if (filteredOptions[i] is Map && (filteredOptions[i]['isCorrect'] == true || filteredOptions[i]['correct'] == true)) {
         correctIndex = i;
-        correctOptionId = filteredOptions[i]['_id']?.toString();
         break;
       }
     }

@@ -1,122 +1,3 @@
-// import 'package:flutter/material.dart';
-// import 'package:lms_app/widgets/see_answer_screen/nav_legend_item.dart';
-
-// class QuestionNavigatorDrawer extends StatelessWidget {
-//   final int currentQuestion;
-//   final int totalQuestions;
-//   final Function(int) onQuestionTap;
-
-//   const QuestionNavigatorDrawer({
-//     Key? key,
-//     required this.currentQuestion,
-//     required this.totalQuestions,
-//     required this.onQuestionTap,
-//   }) : super(key: key);
-
-//   @override
-//   Widget build(BuildContext context) {
-//     return Drawer(
-//       width: 280,
-//       child: SafeArea(
-//         child: Column(
-//           children: [
-//             Container(
-//               width: double.infinity,
-//               padding: const EdgeInsets.all(20),
-//               decoration: BoxDecoration(
-//                 color: Colors.white,
-//                 border: Border(
-//                   bottom: BorderSide(color: Colors.grey[200]!),
-//                 ),
-//               ),
-//               child: Column(
-//                 crossAxisAlignment: CrossAxisAlignment.start,
-//                 children: [
-//                   const Text(
-//                     'Question Navigator',
-//                     style: TextStyle(
-//                       fontSize: 18,
-//                       fontWeight: FontWeight.bold,
-//                       color: Colors.black87,
-//                     ),
-//                   ),
-//                   const SizedBox(height: 16),
-//                   Row(
-//                     children: [
-//                       NavLegendItem(
-//                         color: Colors.blue,
-//                         label: 'Current',
-//                       ),
-//                     ],
-//                   ),
-//                   const SizedBox(height: 8),
-//                   Row(
-//                     children: [
-//                       NavLegendItem(
-//                         color: Colors.green[100]!,
-//                         label: 'Answered',
-//                       ),
-//                     ],
-//                   ),
-//                   const SizedBox(height: 8),
-//                   Row(
-//                     children: [
-//                       NavLegendItem(
-//                         color: Colors.grey[300]!,
-//                         label: 'Unanswered',
-//                       ),
-//                     ],
-//                   ),
-//                 ],
-//               ),
-//             ),
-//             Expanded(
-//               child: Padding(
-//                 padding: const EdgeInsets.all(20),
-//                 child: GridView.builder(
-//                   gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-//                     crossAxisCount: 5,
-//                     crossAxisSpacing: 10,
-//                     mainAxisSpacing: 10,
-//                     childAspectRatio: 1,
-//                   ),
-//                   itemCount: totalQuestions,
-//                   itemBuilder: (context, index) {
-//                     bool isCurrent = index == currentQuestion;
-//                     return GestureDetector(
-//                       onTap: () => onQuestionTap(index),
-//                       child: Container(
-//                         decoration: BoxDecoration(
-//                           color: isCurrent ? Colors.blue : Colors.white,
-//                           borderRadius: BorderRadius.circular(8),
-//                           border: Border.all(
-//                             color: isCurrent ? Colors.blue : Colors.grey[300]!,
-//                             width: isCurrent ? 2 : 1,
-//                           ),
-//                         ),
-//                         child: Center(
-//                           child: Text(
-//                             '${index + 1}',
-//                             style: TextStyle(
-//                               fontSize: 16,
-//                               fontWeight: FontWeight.w600,
-//                               color: isCurrent ? Colors.white : Colors.black87,
-//                             ),
-//                           ),
-//                         ),
-//                       ),
-//                     );
-//                   },
-//                 ),
-//               ),
-//             ),
-//           ],
-//         ),
-//       ),
-//     );
-//   }
-// }
-
 import 'package:flutter/material.dart';
 import 'package:lms_app/models/see_answers_model.dart';
 
@@ -140,7 +21,12 @@ class QuestionNavigatorDrawer extends StatelessWidget {
       child: Column(
         children: [
           Container(
-            padding: const EdgeInsets.only(top: 60, bottom: 20, left: 20, right: 20),
+            padding: const EdgeInsets.only(
+              top: 60,
+              bottom: 20,
+              left: 20,
+              right: 20,
+            ),
             color: Colors.blue[600],
             width: double.infinity,
             child: const Text(
@@ -164,7 +50,9 @@ class QuestionNavigatorDrawer extends StatelessWidget {
                 itemCount: totalQuestions,
                 itemBuilder: (context, index) {
                   final isCurrent = index == currentQuestion;
-                  final hasExplanation = questions[index].explanation != null || questions[index].visualExplanationUrl != null;
+                  final hasExplanation =
+                      questions[index].explanation != null ||
+                      questions[index].visualExplanationUrl != null;
 
                   return GestureDetector(
                     onTap: () => onQuestionTap(index),
@@ -184,8 +72,12 @@ class QuestionNavigatorDrawer extends StatelessWidget {
                             child: Text(
                               '${index + 1}',
                               style: TextStyle(
-                                color: isCurrent ? Colors.blue[900] : Colors.black87,
-                                fontWeight: isCurrent ? FontWeight.bold : FontWeight.normal,
+                                color: isCurrent
+                                    ? Colors.blue[900]
+                                    : Colors.black87,
+                                fontWeight: isCurrent
+                                    ? FontWeight.bold
+                                    : FontWeight.normal,
                               ),
                             ),
                           ),
@@ -200,7 +92,10 @@ class QuestionNavigatorDrawer extends StatelessWidget {
                                 decoration: BoxDecoration(
                                   color: Colors.orange[400],
                                   shape: BoxShape.circle,
-                                  border: Border.all(color: Colors.white, width: 1),
+                                  border: Border.all(
+                                    color: Colors.white,
+                                    width: 1,
+                                  ),
                                 ),
                                 child: Icon(
                                   Icons.menu_book,

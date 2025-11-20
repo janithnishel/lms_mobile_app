@@ -15,12 +15,13 @@ import 'package:lms_app/widgets/see_answer_screen/question_navigation_footer.dar
 // Existing Widgets
 import 'package:lms_app/widgets/see_answer_screen/question_navigator_drawer.dart';
 
-// 🚀 SeeAnswersScreen: Now StatelessWidget
+// 🚀 SeeAnswersScreen: Now StatelessWidget with multiple constructors
 class SeeAnswersScreen extends StatelessWidget {
-  final Map<String, dynamic> attemptData;
-  final String paperTitle;
+  final Map<String, dynamic>? attemptData;
+  final String? paperTitle;
   final String paperId;
 
+  // Constructor when we have full attempt data (legacy support)
   const SeeAnswersScreen({
     Key? key,
     required this.attemptData,
@@ -28,16 +29,49 @@ class SeeAnswersScreen extends StatelessWidget {
     required this.paperId,
   }) : super(key: key);
 
+  // Constructor when we only have paperId - screen will fetch attempt data itself
+  const SeeAnswersScreen.fromPaperId({
+    Key? key,
+    required this.paperId,
+  }) : attemptData = null,
+       paperTitle = null,
+       super(key: key);
+
+  // Constructor when we have paperId and want to show actual paper title
+  const SeeAnswersScreen.fromPaperIdWithTitle({
+    Key? key,
+    required this.paperId,
+    required String paperTitle,
+  }) : attemptData = null,
+       paperTitle = paperTitle,
+       super(key: key);
+
   @override
   // Cubit Provider: Initializes the cubit and loads data once.
   Widget build(BuildContext context) {
+    // If we only have paperId, create a placeholder screen that fetches data
+    if (attemptData == null) {
+      return BlocProvider(
+        create: (context) {
+          final repository = context.read<SeeAnswersRepository>();
+          final cubit = SeeAnswersCubit(repository);
+
+          // Load the attempt data by paperId
+          cubit.loadAttemptDataByPaperId(paperId);
+
+          return cubit;
+        },
+        child: _SeeAnswersView(paperTitle:paperTitle??'Review Answers', attemptData: const {}),
+      );
+    }
+
     // Extract attempt ID from attemptData for /papers/{attemptId}/review endpoint
     // Try multiple possible field names for the ID
     final String attemptId =
-        (attemptData['_id'] as String?) ?? (attemptData['id'] as String?) ?? '';
+        (attemptData!['_id'] as String?) ?? (attemptData!['id'] as String?) ?? '';
 
     debugPrint(
-      'SeeAnswersScreen - attemptData keys: ${attemptData.keys.toList()}',
+      'SeeAnswersScreen - attemptData keys: ${attemptData!.keys.toList()}',
     );
     debugPrint('SeeAnswersScreen - attemptData: $attemptData');
     debugPrint('SeeAnswersScreen - extracted attemptId: $attemptId');
@@ -80,14 +114,14 @@ class SeeAnswersScreen extends StatelessWidget {
 
         // Use attemptId for the /attempts/{attemptId}/review endpoint
         cubit.loadAnswers(
-          attemptData,
-          paperTitle,
+          attemptData!,
+          paperTitle ?? 'Review Answers',
           attemptId, // Use attemptData['_id'] for /attempts/{id}/review endpoint
         );
 
         return cubit;
       },
-      child: _SeeAnswersView(paperTitle: paperTitle, attemptData: attemptData),
+      child: _SeeAnswersView(paperTitle: paperTitle ?? 'Review Answers', attemptData: attemptData!),
     );
   }
 }

@@ -140,7 +140,7 @@ class AppRouter {
           ),
 
           GoRoute(
-            path: '/paper_instructions',
+            path: AppRoutes.paperInstruction,
             name: 'paperInstruction',
             builder: (context, state) {
               // extra parameter එකෙන් PaperIntroDetails object එක retrieve කිරීම
@@ -150,23 +150,17 @@ class AppRouter {
             },
           ),
           GoRoute(
-            path: '/quiz/:paperId', // 'paperQuiz' නමින් ඔබ කලින් දුන් route එක
+            path: AppRoutes.paperQuiz,
             name: 'paperQuiz',
             builder: (context, state) {
-              final String paperId = state.pathParameters['paperId']!;
+              final String paperId = state.extra as String;
               return QuizScreen(paperId: paperId);
             },
           ),
-          // 🔑 මෙය ඔබේ main GoRouter config එකට එකතු කරන්න
           GoRoute(
             path: '/results/:resultId',
-            name: 'results', // Quiz Screen එකෙන් call කරන්නේ මේ නමෙන්
+            name: 'results',
             builder: (BuildContext context, GoRouterState state) {
-              // Since ResultsScreen is top-level/fetch-all, resultId/resultData
-              // are often ignored here, but we keep the structure.
-              // final String resultId = state.pathParameters['resultId']!;
-              // final resultData = state.extra as Map<String, dynamic>?;
-
               return const ResultsScreen();
             },
           ),
@@ -175,47 +169,55 @@ class AppRouter {
             path: '/see-answers/:paperId',
             name: 'see-answers',
             builder: (BuildContext context, GoRouterState state) {
-              final paperId = state.pathParameters['paperId'] ?? 'N/A';
+              final paperId = state.pathParameters['paperId'] ?? '';
+              final extra = state.extra;
 
-              // The full attempt data object (Map) is expected to be passed via 'extra'
-              final attemptData = state.extra as Map<String, dynamic>?;
-
-              if (attemptData == null || paperId == 'N/A') {
+              if (paperId.isEmpty) {
                 return const Scaffold(
                   body: Center(
                     child: Text(
-                      'Error: Attempt data or Paper ID missing for review.',
+                      'Error: Paper ID missing for review.',
                     ),
                   ),
                 );
               }
 
-              // --- FIX: Robust Paper Title Extraction Logic ---
-              String title = 'Review Answers';
+              // Handle different types of extra data
+              if (extra is Map<String, dynamic>) {
+                // If we have attempt data, use the full constructor
+                // --- FIX: Robust Paper Title Extraction Logic ---
+                String title = 'Review Answers';
 
-              // 1. Check for 'paperTitle' key (simplest case)
-              if (attemptData['paperTitle'] is String &&
-                  (attemptData['paperTitle'] as String).isNotEmpty) {
-                title = attemptData['paperTitle'] as String;
-              }
-              // 2. Check for 'paperId' or 'paper' object and extract its title
-              else {
-                final paperObj = attemptData['paperId'] ?? attemptData['paper'];
-                if (paperObj is Map &&
-                    paperObj['title'] is String &&
-                    (paperObj['title'] as String).isNotEmpty) {
-                  title = paperObj['title'] as String;
+                // 1. Check for 'paperTitle' key (simplest case)
+                if (extra['paperTitle'] is String &&
+                    (extra['paperTitle'] as String).isNotEmpty) {
+                  title = extra['paperTitle'] as String;
                 }
+                // 2. Check for 'paperId' or 'paper' object and extract its title
+                else {
+                  final paperObj = extra['paperId'] ?? extra['paper'];
+                  if (paperObj is Map &&
+                      paperObj['title'] is String &&
+                      (paperObj['title'] as String).isNotEmpty) {
+                    title = paperObj['title'] as String;
+                  }
+                }
+
+                return SeeAnswersScreen(
+                  attemptData: extra,
+                  paperId: paperId,
+                  paperTitle: title,
+                );
+              } else if (extra is String && extra.isNotEmpty) {
+                // If we have paperTitle as a string in extra, use the new constructor
+                return SeeAnswersScreen.fromPaperIdWithTitle(
+                  paperId: paperId,
+                  paperTitle: extra,
+                );
+              } else {
+                // If no extra data, use the original constructor that fetches it
+                return SeeAnswersScreen.fromPaperId(paperId: paperId);
               }
-
-              final paperTitle = title;
-              // --- END FIX ---
-
-              return SeeAnswersScreen(
-                attemptData: attemptData,
-                paperId: paperId,
-                paperTitle: paperTitle,
-              );
             },
           ),
         ],
