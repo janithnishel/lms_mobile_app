@@ -3,7 +3,6 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
-import 'package:flutter/widgets.dart';
 import 'package:go_router/go_router.dart';
 import 'package:lms_app/logic/auth/auth_cubit.dart';
 import 'package:lms_app/logic/auth/auth_state.dart';
@@ -12,6 +11,7 @@ import 'package:lms_app/screens/assignment/paper_instruction_screen.dart';
 import 'package:lms_app/screens/assignment/quiz_screen.dart';
 import 'package:lms_app/screens/assignment/results_screen.dart';
 import 'package:lms_app/screens/assignment/see_answers_screen.dart';
+import 'package:lms_app/screens/assignment/structure_paper_screen.dart';
 import 'package:lms_app/screens/auth/login_screen.dart';
 import 'package:lms_app/screens/auth/register_screen.dart';
 import 'package:lms_app/screens/onboarding/onboarding_screen_one.dart';
@@ -27,6 +27,7 @@ abstract class AppRoutes {
   static const mainscreen = '/mainscreen';
   static const paperInstruction = '/paperInstruction';
   static const paperQuiz = '/paperQuiz';
+  static const structurePaper = '/structurePaper';
 }
 
 class AppRouter {
@@ -158,6 +159,13 @@ class AppRouter {
             },
           ),
           GoRoute(
+            path: AppRoutes.structurePaper,
+            name: 'structurePaper',
+            builder: (context, state) {
+              return StructurePaperScreen();
+            },
+          ),
+          GoRoute(
             path: '/results/:resultId',
             name: 'results',
             builder: (BuildContext context, GoRouterState state) {
@@ -175,9 +183,7 @@ class AppRouter {
               if (paperId.isEmpty) {
                 return const Scaffold(
                   body: Center(
-                    child: Text(
-                      'Error: Paper ID missing for review.',
-                    ),
+                    child: Text('Error: Paper ID missing for review.'),
                   ),
                 );
               }

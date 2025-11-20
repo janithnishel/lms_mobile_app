@@ -400,7 +400,9 @@ class _QuizViewState extends State<_QuizView> {
               elevation: 0,
               leading: IconButton(
                 icon: const Icon(Icons.menu, color: Colors.blue),
-                onPressed: () => _scaffoldKey.currentState?.openDrawer(),
+                onPressed: () {
+                  _scaffoldKey.currentState!.openDrawer();
+                },
               ),
               title: Text(
                 state.paperDetails.title,
@@ -415,13 +417,13 @@ class _QuizViewState extends State<_QuizView> {
             ),
 
             body: Column(
-              children: [
-                // --- LMS Time Warning: Show when 5 minutes or less remaining ---
-                if (userState.timeRemainingSeconds <= 300) ...[
-                  const _LMSStyleTimeWarning(), // Static banner when < 5 minutes
-                ],
+                children: [
+                  // --- LMS Time Warning: Show when 5 minutes or less remaining ---
+                  if (userState.timeRemainingSeconds <= 300) ...[
+                    const _LMSStyleTimeWarning(), // Static banner when < 5 minutes
+                  ],
 
-                // --- Status Bar ---
+                  // --- Status Bar ---
                 Container(
                   padding: const EdgeInsets.all(16),
                   color: Colors.blue[50],
@@ -480,8 +482,9 @@ class _QuizViewState extends State<_QuizView> {
                                       fit: BoxFit.cover,
                                       loadingBuilder:
                                           (context, child, loadingProgress) {
-                                            if (loadingProgress == null)
+                                            if (loadingProgress == null) {
                                               return child;
+                                            }
                                             return Center(
                                               child: CircularProgressIndicator(
                                                 value:

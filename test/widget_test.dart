@@ -7,6 +7,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:dio/dio.dart';
 
 import 'package:lms_app/main.dart';
 import 'package:lms_app/logic/auth/auth_cubit.dart';
@@ -23,7 +24,12 @@ void main() {
   final authCubit = AuthCubit(authRepository, authApiService);
   final appRouter = AppRouter(authCubit);
 
-  await tester.pumpWidget(MyApp(authCubit: authCubit, router: appRouter.router));
+  await tester.pumpWidget(MyApp(
+    authCubit: authCubit,
+    router: appRouter.router,
+    dio: Dio(BaseOptions(baseUrl: 'http://10.0.2.2:5000')),
+    authRepository: authRepository,
+  ));
 
     // Verify that our counter starts at 0.
     expect(find.text('0'), findsOneWidget);

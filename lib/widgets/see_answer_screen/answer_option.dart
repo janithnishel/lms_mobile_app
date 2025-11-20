@@ -59,7 +59,7 @@ class AnswerOption extends StatelessWidget {
       child: Row(
         children: [
           Text(
-            '${label}.', // Simple text format: A., B., C., D.
+            '$label.', // Simple text format: A., B., C., D.
             style: const TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.bold,

@@ -10,11 +10,7 @@ class SeeAnswersCubit extends Cubit<SeeAnswersState> {
 
   SeeAnswersCubit(this._repository) : super(SeeAnswersInitial());
 
-  String _formatTime(num timeInSeconds) {
-    final minutes = (timeInSeconds.toInt() / 60).floor();
-    final seconds = timeInSeconds.toInt() % 60;
-    return minutes > 0 ? '$minutes min $seconds sec' : '$seconds sec';
-  }
+  // _formatTime method removed - unused element
 
   /// Loads all review data (summary, questions, paper details) by calling the Repository.
   void loadAnswers(

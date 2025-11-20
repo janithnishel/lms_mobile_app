@@ -72,7 +72,7 @@ class SeeAnswersRepository {
       }
     } catch (e) {
       if (e is ServerException) {
-        throw e;
+        rethrow;
       }
       throw ServerException(
         message: 'Error fetching attempt data: $e',
@@ -127,13 +127,11 @@ class SeeAnswersRepository {
       }
 
       for (var question in paperQuestions) {
-        if (question is Map) {
-          final Map<String, dynamic> q = Map<String, dynamic>.from(question);
-          final questionId = q['_id']?.toString() ?? '';
-          final userAnswer = answerMap[questionId];
+        final Map<String, dynamic> q = Map<String, dynamic>.from(question);
+        final questionId = q['_id']?.toString() ?? '';
+        final userAnswer = answerMap[questionId];
 
-          questions.add(_createQuestionData(q, userAnswer));
-        }
+        questions.add(_createQuestionData(q, userAnswer));
       }
     }
 
@@ -155,19 +153,19 @@ class SeeAnswersRepository {
     }
 
     final options = question['options'] as List<dynamic>? ?? [];
-    final filteredOptions = options.where((opt) => opt is Map).where((opt) {
+    final filteredOptions = options.whereType<Map>().where((opt) {
       final text = opt['text']?.toString() ?? '';
       final choiceText = opt['optionText']?.toString() ?? '';
       final hasContent = (text.isNotEmpty && text.length > 1) || (choiceText.isNotEmpty && choiceText.length > 1);
       return hasContent;
     }).toList();
 
-    final optionTexts = filteredOptions.map((opt) => opt is Map ? (opt['text']?.toString() ?? opt['optionText']?.toString() ?? '') : opt.toString()).toList();
+    final optionTexts = filteredOptions.map((opt) => opt['text']?.toString() ?? opt['optionText']?.toString() ?? '').toList();
 
     // Find correct answer index in filtered options
     int correctIndex = -1;
     for (int i = 0; i < filteredOptions.length; i++) {
-      if (filteredOptions[i] is Map && (filteredOptions[i]['isCorrect'] == true || filteredOptions[i]['correct'] == true)) {
+      if (filteredOptions[i]['isCorrect'] == true || filteredOptions[i]['correct'] == true) {
         correctIndex = i;
         break;
       }
@@ -175,11 +173,11 @@ class SeeAnswersRepository {
 
     // Find user's answer index in filtered options
     int userIndex = -2;
-    if (userAnswer != null && userAnswer is Map) {
+    if (userAnswer != null) {
       final selectedOptionId = userAnswer['selectedOptionId']?.toString();
       if (selectedOptionId != null) {
         for (int i = 0; i < filteredOptions.length; i++) {
-          if (filteredOptions[i] is Map && filteredOptions[i]['_id']?.toString() == selectedOptionId) {
+          if (filteredOptions[i]['_id']?.toString() == selectedOptionId) {
             userIndex = i;
             break;
           }

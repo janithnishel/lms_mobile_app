@@ -41,9 +41,8 @@ class SeeAnswersScreen extends StatelessWidget {
   const SeeAnswersScreen.fromPaperIdWithTitle({
     Key? key,
     required this.paperId,
-    required String paperTitle,
+    required this.paperTitle,
   }) : attemptData = null,
-       paperTitle = paperTitle,
        super(key: key);
 
   @override
@@ -219,8 +218,7 @@ class _SeeAnswersView extends StatelessWidget {
 
             // Check if time remaining is less than 5 minutes (standard LMS behavior)
             // For demo purposes, show warning when there's time data
-            final bool showTimeWarning =
-                summary.timeSpent != null; // Simplified for demo
+            final bool showTimeWarning = true; // Simplified for demo
             // Real logic: final bool showTimeWarning = (quizTimeLimit - int.parse(summary.timeSpent ?? '0')) <= 300;
 
             return SingleChildScrollView(

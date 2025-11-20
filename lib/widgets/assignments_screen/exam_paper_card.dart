@@ -29,6 +29,11 @@ class ExamPaperCard extends StatelessWidget {
   String _getButtonText(BuildContext context) {
     final isAnswered = _isAnswered(context);
 
+    // Special handling for STRUCTURE papers
+    if (paper.paperType.toUpperCase() == 'STRUCTURE') {
+      return 'View Paper';
+    }
+
     // Special handling for expired tab - check if attempted or not
     if (currentTab == 'expired') {
       // Show "See Answer" if the student attempted the paper before it expired
@@ -57,6 +62,11 @@ class ExamPaperCard extends StatelessWidget {
   // Helper function to decide button color based on status (matching Next.js styling)
   Color _getButtonColor(BuildContext context) {
     final isAnswered = _isAnswered(context);
+
+    // Special handling for STRUCTURE papers
+    if (paper.paperType.toUpperCase() == 'STRUCTURE') {
+      return Colors.purple;
+    }
 
     // Special handling for expired tab - distinguish between See Answer and Expired
     if (currentTab == 'expired') {
@@ -87,6 +97,11 @@ class ExamPaperCard extends StatelessWidget {
   IconData? _getButtonIcon(BuildContext context) {
     final isAnswered = _isAnswered(context);
 
+    // Special handling for STRUCTURE papers
+    if (paper.paperType.toUpperCase() == 'STRUCTURE') {
+      return Icons.remove_red_eye; // Eye icon for "View Paper"
+    }
+
     // Next.js uses Trophy icon for See Answer
     if (isAnswered) {
       return Icons.emoji_events; // Trophy icon (emoji_events is trophy)
@@ -107,6 +122,29 @@ class ExamPaperCard extends StatelessWidget {
   // 🔑 KEY FUNCTION: Navigation Logic (matching Next.js logic)
   void _handleNavigation(BuildContext context) {
     final isAnswered = _isAnswered(context);
+
+    // Special handling for STRUCTURE papers
+    if (paper.paperType.toUpperCase() == 'STRUCTURE') {
+      if (isAnswered) {
+        // Navigate to see answers screen for STRUCTURE papers that have been attempted
+        context.pushNamed('see-answers',
+          pathParameters: {'paperId': paper.id},
+          extra: paper.title); // Pass actual paper title
+      } else {
+        // For active STRUCTURE papers, navigate to structure paper screen
+        // Pass paper details to the screen
+        final structurePaperData = {
+          'paperId': paper.id,
+          'paperTitle': paper.title,
+          'paperDescription': paper.description,
+          'totalQuestions': paper.totalQuestions,
+          'timeLimitMinutes': paper.timeLimitMinutes,
+          'dueDateDisplay': paper.dueDateDisplay,
+        };
+        context.pushNamed('structurePaper', extra: structurePaperData);
+      }
+      return;
+    }
 
     // Special handling for expired tab
     if (currentTab == 'expired') {

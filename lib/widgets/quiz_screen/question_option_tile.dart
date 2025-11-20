@@ -94,7 +94,7 @@ class QuestionOptionTile extends StatelessWidget {
                               final raw = optionImageUrl;
                               if (raw.startsWith('http')) return raw;
                               if (raw.startsWith('/api/uploads')) return '$imageBaseUrl$raw';
-                              if (raw.startsWith('/uploads')) return '$imageBaseUrl' + raw.replaceFirst('/uploads', '/api/uploads');
+                              if (raw.startsWith('/uploads')) return '$imageBaseUrl${raw.replaceFirst('/uploads', '/api/uploads')}';
                               if (raw.startsWith('/')) return '$imageBaseUrl/api/uploads$raw';
                               return '$imageBaseUrl/api/uploads/$raw';
                             }(),

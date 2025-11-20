@@ -132,7 +132,8 @@ class QuizRepository {
       // Debug: Log what we're receiving
       print('QUIZ REPO DEBUG: Student results API returned ${items.length} items');
       items.take(2).forEach((item) {
-        print('QUIZ REPO DEBUG: Result item keys: ${(item as Map).keys.toList()}, _id: ${(item as Map)['_id']}');
+        final Map<String, dynamic> itemMap = Map<String, dynamic>.from(item as Map);
+        print('QUIZ REPO DEBUG: Result item keys: ${itemMap.keys.toList()}, _id: ${itemMap['_id']}');
       });
 
       return items.map<Map<String, dynamic>>((e) => Map<String, dynamic>.from(e as Map)).toList();
@@ -158,7 +159,7 @@ class QuizRepository {
       final List paperList = data['papers'] as List? ?? [];
 
       // More defensive casting for attemptedPapers array
-      final List<dynamic> attemptedPapersList = (data['attemptedPapers'] as List?) ?? [];
+      final List<dynamic> attemptedPapersList = data['attemptedPapers'] ?? [];
       final List<String> attemptedPapers = attemptedPapersList
           .where((id) => id != null)  // Filter out null values
           .map((id) => id.toString())

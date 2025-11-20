@@ -118,7 +118,7 @@ class ExamPaperCardModel {
 
       studentScorePercentage: score,
       studentStatus: status,
-      paperType: paper.paperType ?? 'MCQ', // Default to MCQ if not provided
+      paperType: paper.paperType, // paperType is not nullable
     );
   }
 }
