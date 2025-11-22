@@ -162,7 +162,12 @@ class AppRouter {
             path: AppRoutes.structurePaper,
             name: 'structurePaper',
             builder: (context, state) {
-              return StructurePaperScreen();
+              final paperData = state.extra as Map<String, dynamic>? ?? {};
+              final paperId = paperData['paperId'] as String?;
+              if (paperId != null) {
+                return StructurePaperScreen(paperId: paperId, paperData: paperData);
+              }
+              return const Scaffold(body: Center(child: Text('Error: Missing paper data')));
             },
           ),
           GoRoute(

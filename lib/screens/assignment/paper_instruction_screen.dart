@@ -294,7 +294,7 @@ class PaperInstructionScreen extends StatelessWidget {
                           // 🔑 Start Paper Button Logic: Quiz Screen එකට යන්න
                           context.goNamed(
                             'paperQuiz',
-                            pathParameters: {'paperId': details.paperId},
+                            extra: details.paperId,
                           );
                         },
                         child: Text(

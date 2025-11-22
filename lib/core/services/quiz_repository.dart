@@ -101,7 +101,7 @@ class QuizRepository {
       }
       if (result.containsKey('attempt') && result['attempt'] is Map<String, dynamic>) {
         return result['attempt'] as Map<String, dynamic>;
-      }
+      }/////////////////////////////////////////////////////////////////////////////////////
 
       // Fallback: if the whole response body is itself the attempt/result map
       if (result.isNotEmpty) return result;
@@ -223,9 +223,9 @@ class QuizRepository {
   // ----------------------------------------------------------------------
 
   ExamPaperCardModel? _transformToExamPaperCard(Map<String, dynamic> json) {
-    // Defensive null checking for required fields
-    if (json['_id'] == null || json['title'] == null || json['deadline'] == null) {
-      print('QUIZ REPO: Skipping paper with missing required fields: _id=${json['_id']}, title=${json['title']}, deadline=${json['deadline']}');
+    // Defensive null checking for required fields (deadline is optional, especially for structure papers)
+    if (json['_id'] == null || json['title'] == null) {
+      print('QUIZ REPO: Skipping paper with missing required fields: _id=${json['_id']}, title=${json['title']}');
       return null; // This will be filtered out
     }
 
@@ -235,7 +235,7 @@ class QuizRepository {
         json['description']?.toString() ?? 'No description provided.';
     final totalQuestions = json['totalQuestions'] as int? ?? 0;
     final timeLimitMinutes = json['timeLimit'] as int? ?? 0;
-    final deadline = DateTime.tryParse(json['deadline'].toString()) ?? DateTime.now();
+    final deadline = json['deadline'] != null ? DateTime.tryParse(json['deadline'].toString()) : null;
 
     final Map<String, dynamic>? attempt =
         json['attempt'] as Map<String, dynamic>?;
@@ -245,29 +245,36 @@ class QuizRepository {
     final bool isAvailableToStart = !isCompleted;
 
     final now = DateTime.now();
-    final bool isOverdue = now.isAfter(deadline) && !isCompleted;
-    final Duration remaining = deadline.difference(now);
+    final bool isOverdue = deadline != null ? now.isAfter(deadline) && !isCompleted : false;
+    final Duration remaining = deadline != null ? deadline.difference(now) : Duration.zero;
 
-    String dueDateDisplay =
-        "${deadline.day}th ${DateFormat('MMM yyyy').format(deadline)}";
+    String dueDateDisplay;
     String timeLeftDisplay;
     Color timeLeftColor;
 
-    if (isCompleted) {
-      timeLeftDisplay = "Completed";
-      timeLeftColor = Colors.green;
-    } else if (isOverdue) {
-      timeLeftDisplay = "Overdue";
-      timeLeftColor = Colors.red;
-    } else if (remaining.inDays > 0) {
-      timeLeftDisplay = "${remaining.inDays} Days Left";
-      timeLeftColor = Colors.orange;
-    } else if (remaining.inHours > 0) {
-      timeLeftDisplay = "${remaining.inHours} Hours Left";
-      timeLeftColor = Colors.orange.shade800;
+    if (deadline == null) {
+      dueDateDisplay = "No deadline";
+      timeLeftDisplay = "Always available";
+      timeLeftColor = Colors.blue;
     } else {
-      timeLeftDisplay = "Ending Soon!";
-      timeLeftColor = Colors.red.shade700;
+      dueDateDisplay = "${deadline.day}th ${DateFormat('MMM yyyy').format(deadline)}";
+
+      if (isCompleted) {
+        timeLeftDisplay = "Completed";
+        timeLeftColor = Colors.green;
+      } else if (isOverdue) {
+        timeLeftDisplay = "Overdue";
+        timeLeftColor = Colors.red;
+      } else if (remaining.inDays > 0) {
+        timeLeftDisplay = "${remaining.inDays} Days Left";
+        timeLeftColor = Colors.orange;
+      } else if (remaining.inHours > 0) {
+        timeLeftDisplay = "${remaining.inHours} Hours Left";
+        timeLeftColor = Colors.orange.shade800;
+      } else {
+        timeLeftDisplay = "Ending Soon!";
+        timeLeftColor = Colors.red.shade700;
+      }
     }
 
     return ExamPaperCardModel(

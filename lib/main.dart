@@ -4,6 +4,8 @@ import 'package:go_router/go_router.dart';
 import 'package:dio/dio.dart'; // 💡 Dio Package
 import 'package:lms_app/core/repositories/see_answers_repository.dart';
 import 'package:lms_app/core/services/see_answers_api_service.dart';
+import 'package:lms_app/core/repositories/structure_paper_repository.dart';
+import 'package:lms_app/core/services/structure_paper_api_service.dart';
 import 'logic/auth/auth_cubit.dart';
 import 'core/repositories/auth_repository.dart';
 import 'core/services/auth_api_service.dart';
@@ -73,6 +75,17 @@ class MyApp extends StatelessWidget {
         RepositoryProvider<SeeAnswersRepository>(
           create: (context) =>
               SeeAnswersRepository(context.read<SeeAnswersApiService>()),
+        ),
+
+        // StructurePaperApiService (AuthRepository depend කර ගනී)
+        RepositoryProvider<StructurePaperApiService>(
+          create: (context) => StructurePaperApiService(authRepository),
+        ),
+
+        // StructurePaperRepository (StructurePaperApiService depend කර ගනී)
+        RepositoryProvider<StructurePaperRepository>(
+          create: (context) =>
+              StructurePaperRepository(context.read<StructurePaperApiService>()),
         ),
 
         // 💡 (Optional): AuthRepository එකත් Global access සඳහා Provide කරන්න පුළුවන්.

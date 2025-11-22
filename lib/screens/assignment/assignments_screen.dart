@@ -75,7 +75,7 @@ class AssignmentListBody extends StatefulWidget {
 class _AssignmentListBodyState extends State<AssignmentListBody> {
   // Tab management state
   String activeTab = 'not-answered'; // 'not-answered', 'answered', 'expired'
-  String paperTypeFilter = 'mcq'; // 'all', 'mcq', 'structure' - default to mcq
+  String paperTypeFilter = 'all'; // 'all', 'mcq', 'structure' - default to all to show all papers
 
   // Helper method to calculate exam statistics
   Map<String, dynamic> _calculateExamStats(List<ExamPaperCardModel> papers, List<String> attemptedPapers) {
